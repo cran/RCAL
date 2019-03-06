@@ -1,0 +1,423 @@
+\documentclass[12pt,oneside]{article}
+\usepackage{epsfig,lscape}
+\usepackage{amssymb,amsfonts,amsmath}
+\usepackage{rotating}
+
+\usepackage[utf8]{inputenc}
+
+% page style
+\pagestyle{plain}
+% page format
+\setlength{\oddsidemargin}{.1in}
+\setlength{\evensidemargin}{0in}
+\setlength{\topmargin}{-.5in}   %%%
+\setlength{\textwidth}{6in}
+\setlength{\textheight}{9in}
+% paragraph format
+\setlength{\parindent}{3ex}
+\setlength{\parskip}{0ex}
+\renewcommand{\baselinestretch}{1.5}
+
+\def\me{\mathrm e}
+\def\mi{\mathrm i}
+\def\dif{\mathrm d}
+\def\diag{\mbox{diag}}
+
+%\def\E{\mathrm E}
+\def\var{\mathrm{var}}
+\def\cov{\mathrm{cov}}
+\def\pr{\mathrm{pr}}
+\def\N{\mbox{N}}
+
+\def\tr{\mathrm{tr}}
+\def\T{{ \mathrm{\scriptscriptstyle T} }}
+
+%\VignetteIndexEntry{RCAL vignette}
+
+\begin{document}
+
+\begin{center}
+{\bf\large A Vignette for RCAL (version 1.0)}
+
+\vspace{.15in} Zhiqiang Tan\footnotemark[1]
+
+%\vspace{.05in}
+February 2019
+\end{center}
+
+\footnotetext[1]{Department of Statistics, Rutgers University. Address: 110 Frelinghuysen Road,
+Piscataway, NJ 08854. E-mail: ztan@stat.rutgers.edu.}
+
+\vspace{-.4in}\section{Introduction}\vspace{-.1in}
+
+The R package \texttt{RCAL} (version 1.0) can be used for two main tasks:
+\begin{itemize}\setlength{\itemsep}{-.1in}
+\item to estimate the mean of an outcome in the presence of missing data,
+\item to estimate the average treatment effects in causal inference.
+\end{itemize}
+There are 3 high-level functions provided for the first task:
+\begin{itemize}\setlength{\itemsep}{-.1in}
+\item \texttt{mn.nreg}: inference using non-regularized calibrated estimation,
+\item \texttt{mn.regu.cv}: inference using regularized calibrated estimation based on cross validation,
+\item \texttt{mn.regu.path}: inference using regularized calibrated estimation along a regularization path. 
+\end{itemize}
+The first function \texttt{mn.nreg} is appropriate only in relatively low-dimensional settings,
+whereas the functions \texttt{mn.regu.cv} and \texttt{mn.regu.path} are designed to deal with high-dimensional data (namely, 
+the number of covariates close to or greater than the sample size). 
+In parallel, there are 3 functions for the second task, \texttt{ate.nreg}, \texttt{ate.regu.cv}, and \texttt{ate.regu.path}.
+These functions can also be used to perform inference for the average treatment effects on the treated or on the untreated.
+Currently, the treatment is assumed to be binary (i.e., untreated or treated). 
+Extensions to multi-valued treatments will be incorporated in later versions. 
+
+The package also provides lower-level functions, including \texttt{glm.nreg} to implement non-regularized M-estimation and \texttt{glm.regu} to 
+implement Lasso regularized M-estimation for fitting generalized linear models currently with continuous or binary outcomes. 
+The latter function \texttt{glm.regu} uses an active-set descent algorithm, which enjoys a finite termination property 
+for solving least-squares Lasso problems. 
+
+\section{An example}
+
+We illustrate the use of the package on a simulated dataset as in Tan (2019), Section 4.
+The dataset, \texttt{simu.data}, is included as part of the package.
+
+<<read.data>>=
+library(RCAL)
+
+data(simu.data)
+@
+
+The following shows the first 10 rows and the first 6 columns of the dataset, which is of size $800 \times 202$. 
+
+<<>>=
+simu.data[1:10, 1:6]
+@
+
+The first column represents an observed outcome \texttt{y}, the second column represents a binary treatment \texttt{tr}, and 
+the remaining 200 columns represent covariates. 
+
+<<>>=
+n <- dim(simu.data)[1]
+p <- dim(simu.data)[2]-2
+
+y <- simu.data[,1]
+tr <- simu.data[,2]
+x <- simu.data[,2+1:p]
+x <- scale(x)
+@
+
+To examine the data, Figure~\ref{fig:boxplots} shows the boxplots of the first 6 covariates in the untreated and treated groups,
+and Figure~\ref{fig:scatterplots-treated} shows the scatterplots of observed outcomes and the first 6 covariates in the treated group.
+
+\begin{figure}
+\caption{Boxplots of covariates in the untreated and treated groups.}  \label{fig:boxplots} 
+\vspace{-.1in}
+\begin{center}
+<<fig=TRUE, echo=FALSE>>=
+par(mfrow=c(3,2))
+par(mar=c(4,4,2,2))
+for (j in 1:6) {
+  boxplot(x[,j] ~ tr, ylab=paste("covariate x", j, sep=""), xlab="treatment")
+}
+@
+\end{center}
+\end{figure}
+
+\subsection{Estimation of a population mean with missing data}
+
+\begin{figure}[t!] 
+\caption{Scatterplots of observed outcomes and covariates in the treated group.}\label{fig:scatterplots-treated} 
+\vspace{-.1in}
+\begin{center}
+<<fig=TRUE, echo=FALSE>>=
+par(mfrow=c(3,2))
+par(mar=c(4,4,2,2))
+for (j in 1:6) {
+  plot(x[tr==1,j], y[tr==1], ylab="y", xlab=paste("covariate x", j, sep=""))
+}
+@
+\end{center}
+\end{figure}
+
+We use the potential outcome framework for causal inference (Neyman 1923; Rubin 1974).
+For each individual $i$, the potential outcome $Y^1_i$ with the treatment is the observed outcome $Y_i$ if treatment variable $T_i$ is 1, 
+or missing otherwise. Similarly, the potential outcome $Y^0_i$ without the treatment is observed if treatment variable $T_i$ is 0, or missing otherwise. 
+To estimate the means of the potential outcomes amounts to estimation of population means with missing data. 
+
+In this section, we consider the problem of estimating the mean $\mu^1$ of potenital outcomes $Y^1_i$ with the treatment, which are observed when $T_i$ is 1
+but missing otherwise. The covariates $X_i$ are observed on all individuals in the sample, and can be relevant to the etimation of $\mu^1$ in two distinct ways. 
+On one hand, the covariates $X_i$ can be associated with the treatment variable $T_i$. In other words, individuals with different
+covariates may differ in their probabilities of receiving the treatment, which are denoted as $\pi(X_i)$ and called propensity scores (Rosenbaum and Rubin 1983). 
+On the other hand, the covariates $X_i$ can also be associated with the outcome variable $Y_i$ in the treated group $\{T_i=1\}$.
+The conditional mean of $Y_i$ given $X_i$ and $T_i=1$ is called the outcome regression function in the treated and denoted as $m^1(X_i)$.
+These associations can be seen from Figures~\ref{fig:boxplots} and \ref{fig:scatterplots-treated}.
+
+Ignoring the covariates and using the simple sample average of observed outcomes in the treated yield an estimate $0.47$ with standard error $0.076$. 
+This inference would be biased, since the true value of $\mu^1$ is 0 by the design of the simulated data, as described in \texttt{help(simu.data)}.
+
+<<>>=
+mean(y[tr==1])   # point estimate
+sqrt(var(y[tr==1]) / sum(tr) )   # standard error 
+@
+
+The function \texttt{mn.regu.cv} implements a two-step method for estimating $\mu^1$. First, propensity score and outcome regression models are fitted.
+Denote by $\hat\pi^1(X_i)$ and $\hat m^1(X_i)$ the fitted propensity score and outcome regression function respectively.
+Then the augmented IPW estimator of $\mu^1$ is applied (Robins et al. 1994):
+\begin{align*}
+\hat \mu^1_{\mbox{\tiny AIPW}} = \frac{1}{n} \sum_{i=1}^n \left[ \frac{T_i Y_i}{\hat\pi^1(X_i)} - \left\{ \frac{T_i}{\hat\pi^1(X_i)}-1\right\} \hat m^1(X_i) \right].
+\end{align*}
+For \texttt{ploss}$=$``cal", regularized calibrated estimation is performed with cross validation as in Tan (2017, 2019). The method then leads to model-assisted inference, in which confidence intervals are valid with high-dimensinoal data if the propensity score model is correctly specified but the outcome regression model may be misspecified. With linear outcome models, the inference is also doubly robust. For \texttt{ploss}$=$``ml", regularized maximum likelihood estimation is used (Belloni et al. 2014; Farrell 2015). In this case, standard errors are only shown to be valid if both the propensity score model and the outcome regression model are correctly specified.
+
+For this example, both the propensity score and outcome regressions models are (slightly) misspecified, 
+by the design of the simulated data; see \texttt{help(simu.data)}.
+Nevertheless, regularized calibrated estimation yields an estimate $0.11$ with standard error $0.068$, whereas 
+regularized maximum likelihood estimation yields an estimate $0.089$ with standard error $0.069$.
+Both estimates are much closer to the true value 0, with smaller standard errors, than the unadjusted estimate.
+
+<<keep.source=TRUE>>==
+## regularized calibrated estimation
+set.seed(0)   #this affects random split of data in cross validation
+mn.cv.rcal <- 
+mn.regu.cv(fold=5*c(1,1), nrho=(1+10)*c(1,1), rho.seq=NULL, y, tr, x,
+           ploss="cal", yloss="gaus")
+unlist(mn.cv.rcal$est) 
+sqrt(mn.cv.rcal$est $var)
+
+## regularized maximum likelihood estimation
+set.seed(0)   #this affects random split of data in cross validation
+mn.cv.rml <- 
+mn.regu.cv(fold=5*c(1,1), nrho=(1+10)*c(1,1), rho.seq=NULL, y, tr, x,
+           ploss="ml", yloss="gaus")
+unlist(mn.cv.rml$est)
+sqrt(mn.cv.rml$est $var)
+@
+
+The following shows how the same results can be obtained as above, but using the lower-level function \texttt{glm.regu.cv}
+to perform regularized M-estimation for fitting propensity score and outcome regression models, and using the function 
+\texttt{mn.aipw} to compute the augmented IPW estimates. 
+
+<<keep.source=TRUE>>==
+## regularized calibrated estimation
+set.seed(0)
+ps.cv.rcal <- 
+glm.regu.cv(fold=5, nrho=1+10, y=tr, x=x, loss="cal")
+ps.cv.rcal$sel.nz[1]
+fp.cv.rcal <- ps.cv.rcal $sel.fit[,1]
+
+or.cv.rcal <- 
+glm.regu.cv(fold=5, nrho=1+10, y=y[tr==1], x=x[tr==1,], 
+            iw=1/fp.cv.rcal[tr==1]-1, loss="gaus")
+fo.cv.rcal <- c( cbind(1,x)%*%or.cv.rcal$sel.bet[,1] )
+
+mn.cv.rcal2 <- unlist(mn.aipw(y, tr, fp=fp.cv.rcal, fo=fo.cv.rcal))
+mn.cv.rcal2
+
+## regularized maximum likelihood estimation
+set.seed(0)
+
+ps.cv.rml <- 
+glm.regu.cv(fold=5, nrho=1+10, y=tr, x=x, loss="ml")
+ps.cv.rml$sel.nz[1]
+fp.cv.rml <- ps.cv.rml $sel.fit[,1]
+
+or.cv.rml <- 
+glm.regu.cv(fold=5, nrho=1+10, y=y[tr==1], x=x[tr==1,], 
+            iw=NULL, loss="gaus")
+fo.cv.rml <- c( cbind(1,x)%*%or.cv.rml$sel.bet[,1] )
+
+mn.cv.rml2 <- unlist(mn.aipw(y, tr, fp=fp.cv.rml, fo=fo.cv.rml))
+mn.cv.rml2
+@
+
+\subsection{Closer look at propensity score estimation}
+
+One of the difficulties in estimating the population mean $\mu^1$ is that the treated group is, by definition, a selected sub-sample and hence may not be
+representative of the entire sample.
+The idea of inverse probability weighting is to reweight individuals in the treated group by the inverse of propensity scores, so that
+the weighted averages of covariates in the treated group are similar to the simple averages in the entire sample. Hence
+it is desirable to reduce the following differences as much as possible given the sample size and the number of covariates under study:
+\begin{align*}
+\frac{1}{n} \sum_{i=1}^n \left\{\frac{T_i}{\hat\pi^1(X_i)}-1\right\} X_{ji} = 
+\sum_{i: \,T_i=1, 1\le i \le n} \hat w_i X_{ji} - \frac{1}{n} \sum_{i=1}^n X_{ji},  \quad j=1,\ldots,p,
+\end{align*}
+where $\hat w_i = \{n \hat\pi^1(X_i)\}^{-1} $ and $X_{ji}$ denotes the $j$th component of $X_i$.
+If the covariates are standardized with sample means 0 and variances 1, then the above 
+gives the standardized calibration differences as in Tan (2017), Section 5.
+
+The following shows the calculation of such calibration differences using the function \texttt{mn.ipw}.
+The results are plotted in Figure~\ref{fig:std-diff}.
+
+<<fig=FALSE, keep.source=TRUE>>==
+fp.raw <- rep(mean(tr), n)   #constant propensity scores
+check.raw <- mn.ipw(x, tr, fp.raw)
+
+check.cv.rcal <- mn.ipw(x, tr, fp.cv.rcal)
+
+check.cv.rml <- mn.ipw(x, tr, fp.cv.rml)
+
+par(mfrow=c(2,2))
+par(mar=c(4,4,2,2))
+plot(check.raw$est, xlim=c(0,p), ylim=c(-.3,.3), 
+     xlab="", ylab="std diff", main="Raw") 
+abline(h=0)
+
+plot(check.cv.rml$est, xlim=c(0,p), ylim=c(-.3,.3), 
+     xlab="", ylab="std diff", main="RML") 
+abline(h=0)
+abline(h=max(abs(check.cv.rml$est)) *c(-1,1), lty=2)
+
+plot(check.cv.rcal$est, xlim=c(0,p), ylim=c(-.3,.3), 
+     xlab="", ylab="std diff", main="RCAL") 
+abline(h=0)
+abline(h=max(abs(check.cv.rcal$est)) *c(-1,1), lty=2)
+
+plot(fp.cv.rml[tr==1], fp.cv.rcal[tr==1], xlim=c(0,1), ylim=c(0,1), 
+     xlab="RML", ylab="RCAL", main="fitted probabilities")
+abline(c(0,1))
+@
+
+\begin{figure}[t!] 
+\caption{Standardized calibration differences and scattplot of propensity scores.}\label{fig:std-diff} 
+\vspace{-.1in}
+\begin{center}
+<<fig=TRUE, echo=FALSE>>==
+par(mfrow=c(2,2))
+par(mar=c(4,4,2,2))
+plot(check.raw$est, xlim=c(0,p), ylim=c(-.3,.3), 
+     xlab="", ylab="std diff", main="Raw") 
+abline(h=0)
+
+plot(check.cv.rml$est, xlim=c(0,p), ylim=c(-.3,.3), 
+     xlab="", ylab="std diff", main="RML") 
+abline(h=0)
+abline(h=max(abs(check.cv.rml$est)) *c(-1,1), lty=2)
+
+plot(check.cv.rcal$est, xlim=c(0,p), ylim=c(-.3,.3), 
+     xlab="", ylab="std diff", main="RCAL") 
+abline(h=0)
+abline(h=max(abs(check.cv.rcal$est)) *c(-1,1), lty=2)
+
+plot(fp.cv.rml[tr==1], fp.cv.rcal[tr==1], xlim=c(0,1), ylim=c(0,1), 
+     xlab="RML", ylab="RCAL", main="fitted probabilities")
+abline(c(0,1))
+@
+\end{center}
+\end{figure}
+
+The maximum standardized calibration differences from the two methods appear similar to each other.
+However, the number of nonzero coefficients estimated out of a total of 200 is 11 for regularized calibrated estimation,
+but much larger, 32, for regularized maximum likelihood estimation. 
+
+For further comparison, the following uses the function \texttt{glm.regu.path} to compute fitted propensity scores over regularization paths. 
+Figure~\ref{fig:std-diff-path} shows how the maximum absolute standardized differences vary against the numbers of nonzero coefficients and relative variances,
+similarly as in Tan (2017), Section 5.
+In this example, it seems impossible for regularized maximum likelihood estimation to reduce calibration differences to lower than 0.05, even
+with decreased Lasso penalties and increased numbers of nonzero coefficients and relative variance.
+
+<<keep.source=TRUE>>==
+set.seed(0)
+ps.path.rcal <- 
+glm.regu.path(nrho=1+10, rho.seq=NULL, y=tr, x=x, loss="cal")
+fp.path.rcal <- ps.path.rcal $fit.all[, !ps.path.rcal$non.conv]
+
+mdiff.path.rcal <- rep(NA, dim(fp.path.rcal)[2])
+rvar.path.rcal <- rep(NA, dim(fp.path.rcal)[2])
+for (j in 1:dim(fp.path.rcal)[2]) {
+  check.path.rcal <- mn.ipw(x, tr, fp.path.rcal[,j])
+  mdiff.path.rcal[j] <- max(abs(check.path.rcal$est))
+  rvar.path.rcal[j] <- 
+  var(1/fp.path.rcal[tr==1,j])/mean(1/fp.path.rcal[tr==1,j])^2
+}
+
+set.seed(0)
+ps.path.rml <- 
+glm.regu.path(nrho=1+10, rho.seq=NULL, y=tr, x=x, loss="ml")
+fp.path.rml <- ps.path.rml $fit.all[, !ps.path.rml$non.conv]
+
+mdiff.path.rml <- rep(NA, dim(fp.path.rml)[2])
+rvar.path.rml <- rep(NA, dim(fp.path.rml)[2])
+for (j in 1:dim(fp.path.rml)[2]) {
+  check.path.rml <- mn.ipw(x, tr, fp.path.rml[,j])
+  mdiff.path.rml[j] <- max(abs(check.path.rml$est))
+  rvar.path.rml[j] <- 
+  var(1/fp.path.rml[tr==1,j])/mean(1/fp.path.rml[tr==1,j])^2
+}
+@
+
+\begin{figure}[t!] 
+\caption{Maximum absolute standardized differences against the numbers of nonzero coefficients and relative variances}\label{fig:std-diff-path} 
+\vspace{-.1in}
+\begin{center}
+<<fig=TRUE, echo=FALSE>>==
+par(mfrow=c(1,2))
+par(mar=c(4,4,2,2))
+plot(ps.path.rml$nz.all[!ps.path.rml$non.conv], mdiff.path.rml, 
+     xlim=c(0,p), ylim=c(0,.3), xlab="# nonzero", ylab="std diff")
+lines(ps.path.rml$nz.all[!ps.path.rml$non.conv], mdiff.path.rml, lty=3)
+
+points(ps.path.rcal$nz.all[!ps.path.rcal$non.conv], mdiff.path.rcal, pch=4)
+lines(ps.path.rcal$nz.all[!ps.path.rcal$non.conv], mdiff.path.rcal, lty=3)
+
+legend(120,.3, c("RML","RCAL"), pch=c(1,4), cex=.6)
+
+#
+plot(rvar.path.rml, mdiff.path.rml, 
+     xlim=c(0,1.5), ylim=c(0,.3), xlab="rel var", ylab="std diff")
+lines(rvar.path.rml, mdiff.path.rml, lty=3)
+
+points(rvar.path.rcal, mdiff.path.rcal, pch=4)
+lines(rvar.path.rcal, mdiff.path.rcal, lty=3)
+
+legend(1.0,.3, c("RML","RCAL"), pch=c(1,4), cex=.6)
+@
+\end{center}
+\end{figure}
+
+\subsection{Estimation of average treatment effects}
+
+The following shows the use of the function \texttt{ate.regu.cv},
+to estimate the two means $(\mu^0, \mu^1)$ and the ATE, $\mu^1-\mu^0$.
+
+<<keep.source=TRUE>>==
+## regularized calibrated estimation
+set.seed(0)
+ate.cv.rcal <- 
+ate.regu.cv(fold=5*c(1,1), nrho=(1+10)*c(1,1), rho.seq=NULL, y, tr, x,
+            ploss="cal", yloss="gaus")
+matrix(unlist(ate.cv.rcal$est), ncol=2, byrow=T, 
+dimnames=list(c("one", "ipw", "or", "est", "var", "ze", 
+"diff.est", "diff.var", "diff.ze"), c("untreated", "treated")))
+
+
+## regularized maximum likelihood estimation
+set.seed(0)
+ate.cv.rml <- 
+ate.regu.cv(fold=5*c(1,1), nrho=(1+10)*c(1,1), rho.seq=NULL, y, tr, x,
+            ploss="ml", yloss="gaus")
+matrix(unlist(ate.cv.rml$est), ncol=2, byrow=T, 
+dimnames=list(c("one", "ipw", "or", "est", "var", "ze", 
+"diff.est", "diff.var", "diff.ze"), c("untreated", "treated")))
+@
+
+\vspace{.2in}
+\centerline{\bf REFERENCES}
+\begin{description}
+
+\item Belloni, A., Chernozhukov, V., and Hansen, C. (2014) Inference on treatment effects after selection among high-dimensional controls, {\em Review of Economic Studies}, 81, 608-650.
+
+\item Farrell, M.H. (2015) Robust inference on average treatment effects with possibly more covariates than observations. {\em Journal of Econometrics}, 189, 1-23.
+
+\item Neyman, J. (1923) On the application of probability theory to agricultural experiments: Essay on principles, Section 9, translated in {\em Statistical Science}, 1990, 5, 465-480.
+
+\item Robins, J.M., Rotnitzky, A., and Zhao, L.P. (1994) Estimation of regression coefficients when some regressors are not always observed, {\em Journal of the American Statistical Association}, 89, 846-866.
+
+\item Rosenbaum, P.R. and Rubin, D.B. (1983) The central role of the propensity score in observational studies for causal effects, {\em Biometrika}, 70, 41-55.
+
+\item Rubin, D.B. (1974) Estimating causal effects of treatments in randomized and nonrandomized studies, {\em Journal of Educational Psychology}, 66, 688-701.
+
+\item Tan, Z. (2017) Regularized calibrated estimation of propensity scores with model misspecification and high-dimensional data, arXiv:1710.08074.
+
+\item Tan, Z. (2019) Model-assisted inference for treatment effects using regularized calibrated estimation with high-dimensional data, {\em Annals of Statistics}, to appear (preprint arXiv:1801.09817). 
+\end{description}
+
+\end{document}
+
+
