@@ -3,7 +3,7 @@
 \alias{simu.data}
 
 \title{Simulated data}
-\description{A dataset simulated as in Tan (2019), Section 4.}
+\description{A dataset simulated as in Tan (2020), Section 4.}
 
 \usage{data(simu.data)}
 
@@ -57,13 +57,15 @@ tr <- rbinom(n, size=1, prob=expit(eta))
 eta.y <- c( z[,1:4] \%*\% c(1, .5, .25, .125) )
 y <- eta.y + noise
 
-# save 
+# save; if using main effects of x, then both the propensity score
+# and outcome regression models are misspecified
+ 
 simu.data <- cbind(y, tr, x)
 save(simu.data, file="simu.data.rda")
 } }
 
 \references{
 
-Tan, Z. (2019) Model-assisted inference for treatment effects using regularized calibrated estimation with high-dimensional data, \emph{Annals of Statistics}, to appear (preprint arXiv:1801.09817).
+Tan, Z. (2020) Model-assisted inference for treatment effects using regularized calibrated estimation with high-dimensional data, \emph{Annals of Statistics}, 48, 811–837.
 }
 

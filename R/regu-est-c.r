@@ -11,17 +11,21 @@ NULL
 # mn.aipw()
 # ate.ipw()
 # ate.aipw()
+# late.aipw()
 
 ### model-assisted inference with cross validation or along a regularization path
 # mn.regu.cv()
 # ate.regu.cv()
+# late.regu.cv()
 
 # mn.regu.path()
 # ate.regu.path()
+# late.regu.path()
 
 ### model-assisted inference with non-regularized estimation
 # mn.nreg()
 # ate.nreg()
+# late.nreg()
 
 ### non-regularized estimation using trust 
 # loss.cal()
@@ -99,10 +103,9 @@ n.signif <- function(x) {
 #' \item{est}{The ratio IPW estimate.}
 #'
 #' @references
-#' Tan, Z. (2017) Regularized calibrated estimation of propensity scores with model misspecification and high-dimensional data, arXiv:1710.08074. 
+#' Tan, Z. (2020a) Regularized calibrated estimation of propensity scores with model misspecification and high-dimensional data, \emph{Biometrika}, 107, 137–158.
 #'
-#' Tan, Z. (2019) Model-assisted inference for treatment effects using regularized calibrated estimation with high-dimensional data, 
-#' \emph{Annals of Statistics}, to appear (preprint arXiv:1801.09817).
+#' Tan, Z. (2020b) Model-assisted inference for treatment effects using regularized calibrated estimation with high-dimensional data, \emph{Annals of Statistics}, 48, 811–837.
 #'
 #' @export
 
@@ -141,10 +144,10 @@ mn.ipw <- function(y, tr, fp) {
 #' \item{ze}{The z-statistic for the augmented IPW estimate, compared to \code{off}.}
 #'
 #' @references
-#' Tan, Z. (2017) Regularized calibrated estimation of propensity scores with model misspecification and high-dimensional data, arXiv:1710.08074. 
+#' Tan, Z. (2020a) Regularized calibrated estimation of propensity scores with model misspecification and high-dimensional data, \emph{Biometrika}, 107, 137–158.
 #'
-#' Tan, Z. (2019) Model-assisted inference for treatment effects using regularized calibrated estimation with high-dimensional data, 
-#' \emph{Annals of Statistics}, to appear (preprint arXiv:1801.09817).
+#' Tan, Z. (2020b) Model-assisted inference for treatment effects using regularized calibrated estimation with high-dimensional data, \emph{Annals of Statistics}, 48, 811–837.
+#'
 #'
 #' @export
 
@@ -179,10 +182,10 @@ mn.aipw <- function(y, tr, fp, fo, off=0) {
 #' \item{diff}{The ratio IPW estimate of ATE.}
 #'
 #' @references
-#' Tan, Z. (2017) Regularized calibrated estimation of propensity scores with model misspecification and high-dimensional data, arXiv:1710.08074. 
+#' Tan, Z. (2020a) Regularized calibrated estimation of propensity scores with model misspecification and high-dimensional data, \emph{Biometrika}, 107, 137–158.
 #'
-#' Tan, Z. (2019) Model-assisted inference for treatment effects using regularized calibrated estimation with high-dimensional data, 
-#' \emph{Annals of Statistics}, to appear (preprint arXiv:1801.09817).
+#' Tan, Z. (2020b) Model-assisted inference for treatment effects using regularized calibrated estimation with high-dimensional data, \emph{Annals of Statistics}, 48, 811–837.
+#'
 #'
 #' @export
 
@@ -235,10 +238,10 @@ ate.ipw <- function(y, tr, mfp) {
 #' \item{diff.ze}{The z-statistic for the augmented IPW estimate of ATE.}
 #'
 #' @references
-#' Tan, Z. (2017) Regularized calibrated estimation of propensity scores with model misspecification and high-dimensional data, arXiv:1710.08074. 
+#' Tan, Z. (2020a) Regularized calibrated estimation of propensity scores with model misspecification and high-dimensional data, \emph{Biometrika}, 107, 137–158.
 #'
-#' Tan, Z. (2019) Model-assisted inference for treatment effects using regularized calibrated estimation with high-dimensional data, 
-#' \emph{Annals of Statistics}, to appear (preprint arXiv:1801.09817).
+#' Tan, Z. (2020b) Model-assisted inference for treatment effects using regularized calibrated estimation with high-dimensional data, \emph{Annals of Statistics}, 48, 811–837.
+#'
 #'
 #' @export
 
@@ -299,7 +302,7 @@ ate.aipw <- function(y, tr, mfp, mfo, off=NULL) {
 #' using regularized calibrated estimation based on cross validation.
 #'
 #' Two steps are involved in this function: first fitting propensity score and outcome regression models and then applying the augmented IPW estimator 
-#' for a population mean. For \code{ploss}="cal", regularized calibrated estimation is performed with cross validation as described in Tan (2017, 2019). 
+#' for a population mean. For \code{ploss}="cal", regularized calibrated estimation is performed with cross validation as described in Tan (2020a, 2020b). 
 #' The method then leads to model-assisted inference, in which confidence intervals are valid with high-dimensinoal data 
 #' if the propensity score model is correctly specified but the outcome regression model may be misspecified.
 #' With linear outcome models, the inference is also doubly robust.
@@ -330,10 +333,10 @@ ate.aipw <- function(y, tr, mfp, mfo, off=NULL) {
 #'
 #' Farrell, M.H. (2015) Robust inference on average treatment effects with possibly more covariates than observations, \emph{Journal of Econometrics}, 189, 1-23.
 #'
-#' Tan, Z. (2017) Regularized calibrated estimation of propensity scores with model misspecification and high-dimensional data, arXiv:1710.08074. 
+#' Tan, Z. (2020a) Regularized calibrated estimation of propensity scores with model misspecification and high-dimensional data, \emph{Biometrika}, 107, 137–158.
 #'
-#' Tan, Z. (2019) Model-assisted inference for treatment effects using regularized calibrated estimation with high-dimensional data, 
-#' \emph{Annals of Statistics}, to appear (preprint arXiv:1801.09817).
+#' Tan, Z. (2020b) Model-assisted inference for treatment effects using regularized calibrated estimation with high-dimensional data, \emph{Annals of Statistics}, 48, 811–837.
+#'
 #'
 #' @examples 
 #' \donttest{
@@ -392,13 +395,13 @@ mn.regu.cv <- function(fold, nrho=NULL, rho.seq=NULL, y, tr, x,
 #' This function implements model-assisted inference for average treatment effects,
 #' using regularized calibrated estimation based on cross validation.
 #'
-#' For calibrated estimation, two sets of propensity scores are separately estimated for the untreated and treated as discussed in Tan (2017, 2019).
+#' For calibrated estimation, two sets of propensity scores are separately estimated for the untreated and treated as discussed in Tan (2020a, 2020b).
 #' See also \strong{Details} for \code{\link{mn.regu.cv}}.
 #'
 #' @param fold A vector of length 2 giving the fold numbers for cross validation in propensity score estimation and outcome regression respectively.
 #' @param nrho A vector of length 2 giving the numbers of tuning parameters searched in cross validation.
 #' @param rho.seq A list of two vectors giving the tuning parameters in propensity score estimation (first vector) and outcome regression (second vector). 
-#' @param y An \eqn{n} x \eqn{1} vector of obseved outcomes.
+#' @param y An \eqn{n} x \eqn{1} vector of observed outcomes.
 #' @param tr An \eqn{n} x \eqn{1} vector of treatment indicators (=1 if treated or 0 if untreated).
 #' @param x An \eqn{n} x \eqn{p} matix of covariates, used in both propensity score and outcome regression models. 
 #' @param ploss A loss function used in propensity score estimation (either "ml" or "cal").
@@ -414,10 +417,10 @@ mn.regu.cv <- function(fold, nrho=NULL, rho.seq=NULL, y, tr, x,
 #' \item{est}{A list containing the results from augmented IPW estimation by \code{\link{ate.aipw}}.}
 #'
 #' @references
-#' Tan, Z. (2017) Regularized calibrated estimation of propensity scores with model misspecification and high-dimensional data, arXiv:1710.08074. 
+#' Tan, Z. (2020a) Regularized calibrated estimation of propensity scores with model misspecification and high-dimensional data, \emph{Biometrika}, 107, 137–158.
 #'
-#' Tan, Z. (2019) Model-assisted inference for treatment effects using regularized calibrated estimation with high-dimensional data, 
-#' \emph{Annals of Statistics}, to appear (preprint arXiv:1801.09817).
+#' Tan, Z. (2020b) Model-assisted inference for treatment effects using regularized calibrated estimation with high-dimensional data, \emph{Annals of Statistics}, 48, 811–837.
+#'
 #'
 #' @examples 
 #' \donttest{
@@ -522,10 +525,10 @@ ate.regu.cv <- function(fold, nrho=NULL, rho.seq=NULL, y, tr, x,
 #' \item{rho}{A vector of tuning parameters leading to converged results in propensity score estimation.}
 #'
 #' @references
-#' Tan, Z. (2017) Regularized calibrated estimation of propensity scores with model misspecification and high-dimensional data, arXiv:1710.08074. 
+#' Tan, Z. (2020a) Regularized calibrated estimation of propensity scores with model misspecification and high-dimensional data, \emph{Biometrika}, 107, 137–158.
 #'
-#' Tan, Z. (2019) Model-assisted inference for treatment effects using regularized calibrated estimation with high-dimensional data, 
-#' \emph{Annals of Statistics}, to appear (preprint arXiv:1801.09817).
+#' Tan, Z. (2020b) Model-assisted inference for treatment effects using regularized calibrated estimation with high-dimensional data, \emph{Annals of Statistics}, 48, 811–837.
+#'
 #'
 #' @examples 
 #' \donttest{
@@ -627,10 +630,10 @@ mn.regu.path <- function(fold, nrho=NULL, rho.seq=NULL, y, tr, x,
 #' \item{rho}{A vector of tuning parameters leading to converged results in propensity score estimation.}
 #'
 #' @references
-#' Tan, Z. (2017) Regularized calibrated estimation of propensity scores with model misspecification and high-dimensional data, arXiv:1710.08074. 
+#' Tan, Z. (2020a) Regularized calibrated estimation of propensity scores with model misspecification and high-dimensional data, \emph{Biometrika}, 107, 137–158.
 #'
-#' Tan, Z. (2019) Model-assisted inference for treatment effects using regularized calibrated estimation with high-dimensional data, 
-#' \emph{Annals of Statistics}, to appear (preprint arXiv:1801.09817).
+#' Tan, Z. (2020b) Model-assisted inference for treatment effects using regularized calibrated estimation with high-dimensional data, \emph{Annals of Statistics}, 48, 811–837.
+#'
 #'
 #' @examples 
 #' \donttest{
@@ -730,7 +733,7 @@ ate.regu.path <- function(fold, nrho=NULL, rho.seq=NULL, y, tr, x,
 #' using non-regularized calibrated estimation.
 #'
 #' Two steps are involved in this function: first fitting propensity score and outcome regression models and then applying the augmented IPW estimator 
-#' for a population mean. For \code{ploss}="cal", calibrated estimation is performed similarly as in Tan (2017, 2019), but without regularization. 
+#' for a population mean. For \code{ploss}="cal", calibrated estimation is performed similarly as in Tan (2020a, 2020b), but without regularization. 
 #' The method then leads to model-assisted inference, in which confidence intervals are valid if the propensity score model is correctly specified but 
 #' the outcome regression model may be misspecified.
 #' With linear outcome models, the inference is also doubly robust (Kim and Haziza 2014; Vermeulen and Vansteelandt 2015).  
@@ -757,12 +760,11 @@ ate.regu.path <- function(fold, nrho=NULL, rho.seq=NULL, y, tr, x,
 #' Robins, J.M., Rotnitzky, A., and Zhao, L.P. (1994) Estimation of regression coefficients when some regressors are not always observed, 
 #' \emph{Journal of the American Statistical Association}, 89, 846-866.
 #'
-#' Tan, Z. (2017) Regularized calibrated estimation of propensity scores with model misspecification and high-dimensional data, arXiv:1710.08074. 
-#'
-#' Tan, Z. (2019) Model-assisted inference for treatment effects using regularized calibrated estimation with high-dimensional data, 
-#' \emph{Annals of Statistics}, to appear (preprint arXiv:1801.09817).
-#'
 #' Vermeulen, K. and Vansteelandt, S. (2015) Bias-reduced doubly robust estimation, \emph{Journal of the American Statistical Association}, 110, 1024-1036.
+#'
+#' Tan, Z. (2020a) Regularized calibrated estimation of propensity scores with model misspecification and high-dimensional data, \emph{Biometrika}, 107, 137–158.
+#'
+#' Tan, Z. (2020b) Model-assisted inference for treatment effects using regularized calibrated estimation with high-dimensional data, \emph{Annals of Statistics}, 48, 811–837.
 #'
 #' @examples 
 #' data(simu.data)
@@ -818,7 +820,7 @@ mn.nreg <- function(y, tr, x, ploss="cal", yloss="gaus", off=0) {
 #' This function implements model-assisted inference for average treatment effects,
 #' using non-regularized calibrated estimation.
 #'
-#' For calibrated estimation, two sets of propensity scores are separately estimated for the untreated and treated as discussed in Tan (2017, 2019).
+#' For calibrated estimation, two sets of propensity scores are separately estimated for the untreated and treated as discussed in Tan (2020a, 2020b).
 #' See also \strong{Details} for \code{\link{mn.nreg}}.
 #'
 #' @param y An \eqn{n} x \eqn{1} vector of observed outcomes.
@@ -836,10 +838,10 @@ mn.nreg <- function(y, tr, x, ploss="cal", yloss="gaus", off=0) {
 #' \item{est}{A list containing the results from augmented IPW estimation by \code{\link{ate.aipw}}.}
 #'
 #' @references
-#' Tan, Z. (2017) Regularized calibrated estimation of propensity scores with model misspecification and high-dimensional data, arXiv:1710.08074. 
+#' Tan, Z. (2020a) Regularized calibrated estimation of propensity scores with model misspecification and high-dimensional data, \emph{Biometrika}, 107, 137–158.
 #'
-#' Tan, Z. (2019) Model-assisted inference for treatment effects using regularized calibrated estimation with high-dimensional data, 
-#' \emph{Annals of Statistics}, to appear (preprint arXiv:1801.09817).
+#' Tan, Z. (2020b) Model-assisted inference for treatment effects using regularized calibrated estimation with high-dimensional data, \emph{Annals of Statistics}, 48, 811–837.
+#'
 #'
 #' @examples 
 #' data(simu.data)
@@ -975,8 +977,8 @@ loss.bal <- function(gam, tr, x, iw)
 #'
 #' Least squares estimation is implemented by calling \code{lm} for continuous responses (\code{loss}="gaus"). For binary responses, 
 #' maximum likelihood estimation (\code{loss}="ml") is implemented by calling \code{glm}. Calibrated estimation (\code{loss}="cal") is implemented by 
-#' using a trust-region algorithm in the R package \pkg{trust} to minimize the calibration loss, i.e., (8) in Tan (2017). 
-#' Covariate-balancing estimation (\code{loss}="bal") in Imai and Ratkovic (2014) is implemented by using \pkg{trust} to minimize (38) in Tan (2017).
+#' using a trust-region algorithm in the R package \pkg{trust} to minimize the calibration loss, i.e., (6) in Tan (2020). 
+#' Covariate-balancing estimation (\code{loss}="bal") in Imai and Ratkovic (2014) is implemented by using \pkg{trust} to minimize (36) in Tan (2020a).
 #'
 #' @param y An \eqn{n} x \eqn{1} response vector.
 #' @param x An \eqn{n} x \eqn{p} matix of covariates, excluding a constant.
@@ -992,7 +994,8 @@ loss.bal <- function(gam, tr, x, iw)
 #' @references
 #' Imai, K. and Ratkovic, M. (2014) Covariate balancing propensity score, \emph{Journal of the Royal Statistical Society}, Ser. B, 76, 243-263.
 #'
-#' Tan, Z. (2017) Regularized calibrated estimation of propensity scores with model misspecification and high-dimensional data, arXiv:1710.08074. 
+#' Tan, Z. (2020) Regularized calibrated estimation of propensity scores with model misspecification and high-dimensional data, \emph{Biometrika}, 107, 137–158.
+#'
 #' 
 #' @examples
 #' data(simu.data)
@@ -1066,7 +1069,7 @@ glm.nreg <- function(y, x, iw=NULL, loss="cal", init=NULL) {
 #' This function implements regularized M-estimation for fitting generalized linear models with binary or contiunous responses 
 #' based on cross validation.
 #'
-#' Cross validation is performed as described in Tan (2017, 2019). If not specified by users, the sequence of tuning parameters searched is defined as 
+#' Cross validation is performed as described in Tan (2020a, 2020b). If not specified by users, the sequence of tuning parameters searched is defined as 
 #' a geometric series of length \code{nrho}, starting from the value which yields a zero solution, and then decreasing by a factor \code{tune.fac} successively. 
 #'
 #' After cross validation, two tuning parameters are selected. The first and default choice is the value yielding the smallest average test loss.
@@ -1078,7 +1081,7 @@ glm.nreg <- function(y, x, iw=NULL, loss="cal", init=NULL) {
 #' @param y An \eqn{n} x \eqn{1} response vector.
 #' @param x An \eqn{n} x \eqn{p} matix of covariates, excluding a constant.
 #' @param iw An \eqn{n} x \eqn{1} weight vector. 
-#' @param loss A loss function, which can be specified as "guas" for continuous responses, or "ml" or "cal" for binary respones. 
+#' @param loss A loss function, which can be specified as "gaus" for continuous responses, or "ml" or "cal" for binary respones. 
 #' @param n.iter The maximum number of iterations allowed as in \code{\link{glm.regu}}.
 #' @param eps The tolerance used to declare convergence as in \code{\link{glm.regu}}. 
 #' @param tune.fac The multiplier (factor) used to define \code{rho.seq} if only \code{nrho} is specified.
@@ -1102,10 +1105,10 @@ glm.nreg <- function(y, x, iw=NULL, loss="cal", init=NULL) {
 #' @references
 #' Hastie, T., Tibshirani, R., and Friedman. J. (2016) \emph{The Elements of Statistical Learning} (second edition), Springer: New York.
 #'
-#' Tan, Z. (2017) Regularized calibrated estimation of propensity scores with model misspecification and high-dimensional data, arXiv:1710.08074. 
+#' Tan, Z. (2020a) Regularized calibrated estimation of propensity scores with model misspecification and high-dimensional data, \emph{Biometrika}, 107, 137–158.
 #'
-#' Tan, Z. (2019) Model-assisted inference for treatment effects using regularized calibrated estimation with high-dimensional data, 
-#' \emph{Annals of Statistics}, to appear (preprint arXiv:1801.09817).
+#' Tan, Z. (2020b) Model-assisted inference for treatment effects using regularized calibrated estimation with high-dimensional data, \emph{Annals of Statistics}, 48, 811–837.
+#'
 #'
 #' @examples 
 #' \donttest{
@@ -1345,7 +1348,7 @@ glm.regu.cv <- function(fold, nrho=NULL, rho.seq=NULL, y, x, iw=NULL, loss="cal"
 #' @param rho.seq A vector of tuning parameters in a regularization path. If both \code{nrho} and \code{rho.seq} are specified, then \code{rho.seq} overrides \code{nrho}.
 #' @param y An \eqn{n} x \eqn{1} response vector.
 #' @param x An \eqn{n} x \eqn{p} matix of covariates, excluding a constant.
-#' @param loss A loss function, which can be specified as "guas" for continuous responses, or "ml" or "cal" for binary respones. 
+#' @param loss A loss function, which can be specified as "gaus" for continuous responses, or "ml" or "cal" for binary respones. 
 #' @param iw An \eqn{n} x \eqn{1} weight vector. 
 #' @param n.iter The maximum number of iterations allowed as in \code{\link{glm.regu}}.
 #' @param eps The tolerance used to declare convergence as in \code{\link{glm.regu}}. 
@@ -1363,10 +1366,10 @@ glm.regu.cv <- function(fold, nrho=NULL, rho.seq=NULL, y, x, iw=NULL, loss="cal"
 #' \item{fit.all}{A matrix giving fitted values, column by column, along the regularization path.}
 #'
 #' @references
-#' Tan, Z. (2017) Regularized calibrated estimation of propensity scores with model misspecification and high-dimensional data, arXiv:1710.08074. 
+#' Tan, Z. (2020a) Regularized calibrated estimation of propensity scores with model misspecification and high-dimensional data, \emph{Biometrika}, 107, 137–158.
 #'
-#' Tan, Z. (2019) Model-assisted inference for treatment effects using regularized calibrated estimation with high-dimensional data, 
-#' \emph{Annals of Statistics}, to appear (preprint arXiv:1801.09817).
+#' Tan, Z. (2020b) Model-assisted inference for treatment effects using regularized calibrated estimation with high-dimensional data, \emph{Annals of Statistics}, 48, 811–837.
+#'
 #'
 #' @examples 
 #' \donttest{
@@ -1516,13 +1519,13 @@ glm.regu.path <- function(nrho=NULL, rho.seq=NULL, y, x, iw=NULL, loss="cal",
 #' for a fixed choice of tuning parameters.
 #'
 #' For continuous responses, this function uses an active-set descent algorithm (Osborne et al. 2000; Yang and Tan 2018) to solve the least-squares Lasso problem. 
-#' For binary responses, regularized calibrated estimation is implemented using the Fisher scoring descent algorithm in Tan (2017), whereas
+#' For binary responses, regularized calibrated estimation is implemented using the Fisher scoring descent algorithm in Tan (2020), whereas
 #' regularized maximum likelihood estimation is implemented in a similar manner based on quadratic approximation as in the R package \pkg{glmnet}.
 #'
 #' @param y An \eqn{n} x \eqn{1} response vector.
 #' @param x An \eqn{n} x \eqn{p} matix of covariates, excluding a constant.
 #' @param iw An \eqn{n} x \eqn{1} weight vector. 
-#' @param loss A loss function, which can be specified as "guas" for continuous responses, or "ml" or "cal" for binary respones. 
+#' @param loss A loss function, which can be specified as "gaus" for continuous responses, or "ml" or "cal" for binary respones. 
 #' @param init A \eqn{(p+1)} x \eqn{1} vector of initial values (the intercept and coefficients).
 #' @param rhos A \eqn{p} x \eqn{1} vector of Lasso tuning parameters, usually a constant vector, associated with the \eqn{p} coefficients. 
 #' @param test A vector giving the indices of observations between 1 and \eqn{n} which are included in the test set. 
@@ -1566,11 +1569,13 @@ glm.regu.path <- function(nrho=NULL, rho.seq=NULL, y, x, iw=NULL, loss="cal",
 #' @references
 #' Osborne, M., Presnell, B., and Turlach, B. (2000) A new approach to variable selection in least squares problems, \emph{IMA Journal of Numerical Analysis}, 20, 389-404.
 #'
-#' Tan, Z. (2017) Regularized calibrated estimation of propensity scores with model misspecification and high-dimensional data, arXiv:1710.08074. 
-#'
 #' Yang, T. and Tan, Z. (2018) Backfitting algorithms for total-variation and empirical-norm penalized additive modeling with high-dimensional data, \emph{Stat}, 7, e198.
 #'
 #' Tibshirani, R. (1996) Regression shrinkage and selection via the Lasso, \emph{Journal of the Royal Statistical Society}, Ser. B, 58, 267-288.
+#'
+#' Tan, Z. (2020) Regularized calibrated estimation of propensity scores with model misspecification and high-dimensional data, \emph{Biometrika}, 107, 137–158.
+#'
+#'
 #'
 #' @examples 
 #' data(simu.data)
@@ -2367,16 +2372,17 @@ asd <- function(y, x, iw=NULL, init=NULL, rhos,
        nz2=sum(nz.lab[zgns!=0]))
 }
 
+
 # a documentation for the package
 
 #' RCAL: Regularized calibrated estimation
 #'
 #' Regularized calibrated estimation for causal inference and missing-data problems with high-dimensional data.
 #'
-#' The R package \code{RCAL} - version 1.0 can be used for two main tasks:
+#' The R package \code{RCAL} - version 2.0 can be used for two main tasks:
 #' \itemize{
 #'   \item to estimate the mean of an outcome in the presence of missing data,
-#'   \item to estimate the average treatment effects in causal inference.
+#'   \item to estimate the average treatment effects (ATE) and local average treatment effects (LATE) in causal inference.
 #' }
 #' There are 3 high-level functions provided for the first task:
 #' \itemize{
@@ -2387,18 +2393,682 @@ asd <- function(y, x, iw=NULL, init=NULL, rhos,
 #' The first function \code{mn.nreg} is appropriate only in relatively low-dimensional settings,
 #' whereas the functions \code{mn.regu.cv} and \code{mn.regu.path} are designed to deal with high-dimensional data (namely, 
 #' the number of covariates close to or greater than the sample size). 
-#' In parallel, there are 3 functions for the second task, \code{ate.nreg}, \code{ate.regu.cv}, and \code{ate.regu.path}.
+#' In parallel, there are 3 functions for estimating the average treatment effect in the second task, \code{ate.nreg}, \code{ate.regu.cv}, and \code{ate.regu.path}.
 #' These functions can also be used to perform inference for the average treatment effects on the treated or on the untreated.
-#' Currently, the treatment is assumed to be binary (i.e., untreated or treated). 
-#' Extensions to multi-valued treatments will be incorporated in later versions. 
+#' Currently, the treatment is assumed to be binary (i.e., untreated or treated). There are also 3 functions for estimating the local average treatment effect using instrumental variables, 
+#' \code{late.nreg}, \code{late.regu.cv}, and \code{late.regu.path}. Currently both the treatment and instrumental variable are assumed to be binary. Extensions to multi-valued treatments and instrumental variables will be incorporated in later versions. 
 #'
 #' The package also provides lower-level functions, including \code{glm.nreg} to implement non-regularized M-estimation and \code{glm.regu} to 
 #' implement Lasso regularized M-estimation for fitting generalized linear models currently with continuous or binary outcomes. 
 #' The latter function \code{glm.regu} uses an active-set descent algorithm, which enjoys a finite termination property 
 #' for solving least-squares Lasso problems. 
 #'
-#' See the the vignette for more details.
+#' See the the vignettes for more details.
 #' @docType package
 #' @name RCAL-package
 #' @aliases RCAL
 NULL
+
+
+#' Model-assisted inference for local average treatment effects (LATEs) with instrumental variables based on cross validation
+#'
+#' This function implements model-assisted inference for LATEs with instrumental variables, using regularized calibrated estimation based on cross validation.
+#'
+#' For \code{ploss}="cal", regularized calibrated estimation of the instrument propensity score (IPS) and regularized weighted likelihood estimation of the treatment and outcome regression models are performed. The method leads to model-assisted inference for LATE, in which condidence intervals are valid
+#' with high-dimensional data if the IPS model is correctly specified, but the treatment and outcome regression models may be misspecified (Sun and Tan 2020). For \code{ploss}="ml", regularized maximum likelihood estimation is used (Chernozhukov et al. 2018). In this case, standard errors are only shown to be valid if the IPS, treatment and outcome models are all correctly specified.
+#'
+#'
+#' @param fold A vector of length 3 giving the fold numbers for cross validation in instrument propensity score estimation, treatment and outcome regressions respectively.
+#' @param nrho A vector of length 3 giving the numbers of tuning parameters searched in cross validation.
+#' @param rho.seq A list of three vectors giving the tuning parameters in instrument propensity score estimation (first vector), treatment (second vector) and outcome (third vector) regressions. 
+#' @param y An \eqn{n} x \eqn{1} vector of observed outcomes.
+#' @param tr An \eqn{n} x \eqn{1} vector of treatment indicators (=1 if treated or 0 if untreated).
+#' @param iv An \eqn{n} x \eqn{1} vector of instruments (0 or 1).
+#' @param fx An \eqn{n} x \eqn{p} matix of covariates, used in the instrument propensity score model. 
+#' @param gx An \eqn{n} x \eqn{q_1} matix of covariates, used in the treatment regression models. In theory, \code{gx} should be a subvector of \code{gx}, hence \eqn{p\leq q_1}.
+#' @param hx An \eqn{n} x \eqn{q_2} matix of covariates, used in the outcome regression models. In theory, \code{hx} should be a subvector of \code{hx}, hence \eqn{p\leq q_2}. 
+#' @param ploss A loss function used in instrument propensity score estimation (either "ml" for likelihood estimation or "cal" for calibrated estimation).
+#' @param yloss A loss function used in outcome regression (either "gaus" for continuous outcomes or "ml" for binary outcomes).
+#' @param arm An integer 0, 1 or 2 indicating whether \eqn{\theta_0}, \eqn{\theta_1} or both are computed; see \strong{Details} for \code{\link{late.aipw}}.
+#' @param d1 Degree of truncated polynomials of fitted values from treatment regression to be included as regressors in the outcome regression (NULL: no adjustment, 0: piecewise constant, 1: piecewise linear etc.).  
+#' @param d2 Number of knots of fitted values from treatment regression to be included as regressors in the outcome regression, with knots specified as the \eqn{i}/(\code{d2}+1)-quantiles for \eqn{i}=1,...,\code{d2}.
+#' @param off A \eqn{2} x \eqn{1} vector of offset values (e.g., the true values in simulations) used to calculate the z-statistics from augmented IPW estimation.
+#' @param ... Additional arguments to \code{\link{glm.regu.cv}}.
+#'
+#' @return
+#' \item{ips}{A list containing the results from fitting the instrument propensity score models by \code{\link{glm.regu.cv}}.}
+#' \item{mfp}{An \eqn{n} x \eqn{2} matrix of fitted instrument propensity scores for \code{iv}=0 (first column) and \code{iv}=1 (second column).}
+#' \item{tps}{A list containing the results from fitting the treatment regression models by \code{\link{glm.regu.cv}}.}
+#' \item{mft}{An \eqn{n} x \eqn{2} matrix of fitted treatment regression models for \code{iv}=0 (first column) and \code{iv}=1 (second column).}
+#' \item{or}{A list containing the results from fitting the outcome regression models by \code{\link{glm.regu.cv}}.}
+#' \item{mfo}{An \eqn{n} x \eqn{4} matrix of fitted outcome regression models for for \code{iv}=0, \code{tr}=0 (first column), \code{iv}=0, \code{tr}=1 (second column), \code{iv}=1, \code{tr}=0 (third column) and  \code{iv}=1, \code{tr}=1 (fourth column). Two columns are set to \code{NA} if \code{arm}=0 or 1.}
+#' \item{est}{A list containing the results from augmented IPW estimation by \code{\link{late.aipw}}.}
+#'  
+#' @references
+#'
+#' Chernozhukov, V., Chetverikov, D., Demirer, M., Duflo, E., Hansen, C., Newey, W. and Robins, J.M. (2018) Double/debiased machine learning for treatment and structural parameters, \emph{The Econometrics Journal}, 21, C1–C68.
+#'
+#'
+#' Sun, B. and Tan, Z. (2020) High-dimensional model-assisted inference for local average treatment effects with instrumental variables, arXiv:2009.09286.
+#'
+#'
+#' @examples 
+#' \donttest{
+#' data(simu.iv.data)
+#' n <- dim(simu.iv.data)[1]
+#' p <- dim(simu.iv.data)[2]-3
+#' 
+#' y <- simu.iv.data[,1]
+#' tr <- simu.iv.data[,2]
+#' iv <- simu.iv.data[,3]
+#' x <- simu.iv.data[,3+1:p]
+#' x <- scale(x)
+#' 
+#' late.cv.rcal <- late.regu.cv(fold=5*c(1,1,1), nrho=(1+10)*c(1,1,1), rho.seq=NULL, 
+#'                  y, tr, iv, fx=x, gx=x, hx=x, arm=2, d1=1, d2=3, ploss="cal", yloss="gaus")
+#'
+#' matrix(unlist(late.cv.rcal$est), ncol=2, byrow=TRUE, 
+#' dimnames=list(c("ipw", "or", "est", "var", "ze", 
+#'  "late.est", "late.var", "late.ze"), c("theta1", "theta0")))
+#' }
+#'
+#' @export
+
+late.regu.cv <- function(fold, nrho=NULL, rho.seq=NULL, y, tr, iv, fx, gx, hx, arm=2, d1=NULL, d2=NULL,
+                          ploss="cal", yloss="gaus", off=NULL, ...) {
+
+  n <- length(tr)
+  z <- 1+iv
+
+  ps.regu <- vector("list", 2)
+  tr.regu <- vector("list", 2)
+  or.regu <- vector("list", 2*2);
+
+  mfp <- matrix(NA, nrow=n, ncol=2)
+  mft <- matrix(NA, nrow=n, ncol=2)
+  mfo <- matrix(NA, nrow=n, ncol=(2*2));
+  
+  for (k in 2:1) {
+	
+    # propensity score
+    if (k==2 | ploss=="cal") {
+      ps.regu[[k]] <- glm.regu.cv(fold=fold[1], nrho=nrho[1], rho.seq=rho.seq[[1]], y= z==k, x=fx, 
+                                    iw=NULL, loss=ploss,...)
+
+      mfp[,k] <- ps.regu[[k]] $sel.fit[,1];
+	  
+    } else { # k==1 & ploss=="ml"
+      mfp[,1] <- 1-mfp[,2];
+    }
+
+	# treatment model
+    if (ploss=="ml") {
+       iw <- NULL
+       tr.regu[[k]]     <- glm.regu.cv(fold=fold[2], nrho=nrho[2], rho.seq=rho.seq[[2]], tr[z==k], gx[z==k,], 
+                                           iw=iw, loss="ml", ...)
+	   # binary treatment
+       mft[,k] <- expit( c( cbind(1,gx)%*%tr.regu[[k]]$sel.bet[,1] ) )
+
+    }  else {  # "cal"
+        iw <- 1/mfp[z==k,k] -1 #glm.regu.path returns -xi when loss function is l^0_CAL()! 
+        tr.regu[[k]] <- glm.regu.cv(fold=fold[2], nrho=nrho[2], rho.seq=rho.seq[[2]], tr[z==k], gx[z==k,], 
+                                         iw=iw, loss="ml", ...)
+     	# binary treatment
+        mft[,k] <- expit( c( cbind(1,gx)%*%tr.regu[[k]]$sel.bet[,1] ) )
+    }
+	
+    # build h(X)
+    if (sd(mft[,k])!=0  & !is.null(d1) & !is.null(d2)) {
+	    psi.spl = tp(mft[,k],degree=d1, k=(d1+d2));
+		hx=cbind(hx,psi.spl$X,psi.spl$Z);		
+	}
+  }
+  
+
+   # outcome model
+   
+  for (k in 2:1) {
+    if (ploss=="ml") {
+    	iw <- NULL
+        if (! arm==1) {or.regu[[2*k-1]] <- glm.regu.cv(fold=fold[3], nrho=nrho[3], rho.seq=rho.seq[[3]], y[z==k & tr==0], hx[z==k & tr==0,], 
+                                         iw=iw, loss=yloss, ...)}
+        if (! arm==0) {or.regu[[2*k]]   <- glm.regu.cv(fold=fold[3], nrho=nrho[3], rho.seq=rho.seq[[3]], y[z==k & tr==1], hx[z==k & tr==1,], 
+                                         iw=iw, loss=yloss, ...)}					 
+    }  else {  # "cal"
+       iw <- 1/mfp[z==k,k] -1 #glm.regu.path returns -xi when loss function is l^0_CAL()! 
+       eta0 <- 1-mft[z==k,k];
+       iwt0 <- iw*eta0;
+       if (! arm==1) {or.regu[[2*k-1]] <- glm.regu.cv(fold=fold[3], nrho=nrho[3], rho.seq=rho.seq[[3]], y[z==k]*(1-tr[z==k])/eta0, hx[z==k,], 
+                                         iw=iwt0, loss=yloss, ...)}
+	   eta1 <- 1-eta0;
+       iwt1 <- iw*eta1;
+       if (! arm==0) {or.regu[[2*k]]  <- glm.regu.cv(fold=fold[3], nrho=nrho[3], rho.seq=rho.seq[[3]], y[z==k]*tr[z==k]/eta1, hx[z==k,], 
+                                          iw=iwt1, loss=yloss, ...)}
+    }
+	
+    if (yloss=="gaus") {  
+	  if (! arm==1) {mfo[,(2*k-1)] <- c( cbind(1,hx)%*%or.regu[[2*k-1]] $sel.bet[,1] )};
+      if (! arm==0) {mfo[,(2*k)]   <- c( cbind(1,hx)%*%or.regu[[2*k]] $sel.bet[,1] )};
+
+
+    } else { 
+	  # binary y
+      if (! arm==1) {mfo[,(2*k-1)] <- expit( c( cbind(1,hx)%*%or.regu[[2*k-1]] $sel.bet[,1] ) )};
+      if (! arm==0) {mfo[,(2*k)]   <- expit( c( cbind(1,hx)%*%or.regu[[2*k]] $sel.bet[,1] ) )};
+
+    }
+  }
+  # LATE estimation
+  out.late <-late.aipw(y, tr, iv, mfp=mfp, mft=mft, mfo=mfo, off=off);
+  if (arm==1) {out.late$ipw[2]<- NA}
+  if (arm==0) {out.late$ipw[1]<- NA}
+
+  list(ips=ps.regu, mfp=mfp, tps=tr.regu, mft=mft, or=or.regu, mfo=mfo, est=out.late)
+
+}
+
+
+#' Augmented inverse probability weighted estimation of local average treatment effects
+#'
+#' This function implements augmented inverse probability weighted (IPW) estimation of local average treatment effects (LATEs) as proposed in Tan (2006),
+#' provided the fitted instrument propensity scores and fitted values from both treatment and outcome regressions.
+#'
+#' The individual expectations \eqn{\theta_d=E(Y(d)|D(1)>D(0))} are estimated separately for \eqn{d\in\{0,1\}} using inverse probability weighting ("ipw"), treatment and outcome regressions ("or") and augmented IPW methods as proposed in Tan (2006). The population LATE is defined as \eqn{\theta_1-\theta_0}.
+#'
+#'
+#' @param y An \eqn{n} x \eqn{1} vector of observed outcomes.
+#' @param tr An \eqn{n} x \eqn{1} vector of treatment indicators (=1 if treated or 0 if untreated).
+#' @param iv An \eqn{n} x \eqn{1} vector of instruments (0 or 1).
+#' @param mfp An \eqn{n} x \eqn{2} matrix of fitted instrument propensity scores for \code{iv}=0 (first column) and \code{iv}=1 (second column).
+#' @param mft An \eqn{n} x \eqn{2} matrix of fitted values from treatment regression, for \code{iv}=0 (first column) and \code{iv}=1 (second column).
+#' @param mfo An \eqn{n} x \eqn{4} matrix of fitted values from outcome regression, for \code{iv}=0, \code{tr}=0 (first column), \code{iv}=0, \code{tr}=1 (second column), \code{iv}=1, \code{tr}=0 (third column) and  \code{iv}=1, \code{tr}=1 (fourth column).
+#' @param off A \eqn{2} x \eqn{1} vector of offset values (e.g., the true values in simulations) used to calculate the z-statistics.
+#'
+#' @return
+#' \item{ipw}{A \eqn{2} x \eqn{1} vector of IPW estimates of \eqn{\theta_1} and \eqn{\theta_0}; see \strong{Details}.}
+#' \item{or}{A \eqn{2} x \eqn{1} vector of regression estimates of \eqn{\theta_1} and \eqn{\theta_0}; see \strong{Details}.}
+#' \item{est}{A \eqn{2} x \eqn{1} vector of augmented IPW estimates of \eqn{\theta_1} and \eqn{\theta_0}; see \strong{Details}.}
+#' \item{var}{The estimated variances associated with the augmented IPW estimates of \eqn{\theta_1} and \eqn{\theta_0}.}
+#' \item{ze}{The z-statistics for the augmented IPW estimates of \eqn{\theta_1} and \eqn{\theta_0}, compared to \code{off}.}
+#' \item{late.est}{The augmented IPW estimate of LATE.}
+#' \item{late.var}{The estimated variance associated with the augmented IPW estimate of LATE.}
+#' \item{late.ze}{The z-statistic for the augmented IPW estimate of LATE, compared to \code{off}.}
+#'
+#' @references
+#'
+#' Tan, Z. (2006) Regression and weighting methods for causal inference using instrumental variables, Journal of the American Statistical Association, 101, 1607–1618.
+#'
+#' @export
+
+late.aipw <- function(y, tr, iv, mfp, mft, mfo, off=NULL) {
+
+
+  n <- length(iv)
+  m <- dim(mfp)[2]
+
+  if (is.null(off)) off <- rep(0,m)
+
+  est1 <- rep(NA, m)
+  est2 <- rep(NA, m)
+  est3 <- rep(NA, m)
+  var3 <- rep(NA, m)
+  est4 <- rep(NA, m)
+  var4 <- rep(NA, m)  
+
+  #weighting estimators
+  est1[1] = (sum(iv*tr*y/mfp[,2]-(1-iv)*tr*y/mfp[,1])/n)/(sum(iv*tr/mfp[,2]-(1-iv)*tr/mfp[,1])/n)
+  est1[2] = (sum((1-iv)*(1-tr)*y/mfp[,1]-iv*(1-tr)*y/mfp[,2])/n)/(sum(iv*tr/mfp[,2]-(1-iv)*tr/mfp[,1])/n)
+
+  #regression estimators
+  est2[1] = (sum(mfo[,4]*mft[,2]-mfo[,2]*mft[,1])/n)/(sum(mft[,2]-mft[,1])/n)
+  est2[2] = (sum(mfo[,1]*(1-mft[,1])-mfo[,3]*(1-mft[,2]))/n)/(sum(mft[,2]-mft[,1])/n)
+
+  #DR estimators
+  phi_d1 = iv*tr/mfp[,2]-(iv/mfp[,2]-1)*mft[,2]
+  phi_d0 = (1-iv)*tr/mfp[,1]-((1-iv)/mfp[,1]-1)*mft[,1]
+  phi_y1 = iv*tr*y/mfp[,2]-(iv/mfp[,2]-1)*mfo[,4]*mft[,2]-((1-iv)*tr*y/mfp[,1]-((1-iv)/mfp[,1]-1)*mfo[,2]*mft[,1])
+  phi_y0 = (1-iv)*(1-tr)*y/mfp[,1]-((1-iv)/mfp[,1]-1)*mfo[,1]*(1-mft[,1])-(iv*(1-tr)*y/mfp[,2]-(iv/mfp[,2]-1)*mfo[,3]*(1-mft[,2]))
+  est3[1] =  (sum(phi_y1)/n) /(sum(phi_d1-phi_d0)/n)
+  est3[2] =  (sum(phi_y0)/n) /(sum(phi_d1-phi_d0)/n)
+
+  var3[1] = 1/(sum(phi_d1-phi_d0)/n)^2*mean((phi_y1-est3[1]*(phi_d1-phi_d0))^2)/n
+  var3[2] = 1/(sum(phi_d1-phi_d0)/n)^2*mean((phi_y0-est3[2]*(phi_d1-phi_d0))^2)/n
+
+  #DR estimator of LATE
+  est4[2] = (sum(phi_y1-phi_y0)/n) /(sum(phi_d1-phi_d0)/n)
+  var4[2] = 1/(sum(phi_d1-phi_d0)/n)^2*mean((phi_y1-phi_y0-est4[2]*(phi_d1-phi_d0))^2)/n
+
+  
+  list(ipw=est1, or=est2, est=est3, var=var3, ze=(est3-off)/sqrt(var3),
+       late.est=est4, late.var=var4, late.ze=(est4-(off-off[1]))/sqrt(var4))
+}
+
+
+#' Model-assisted inference for local average treatment effects without regularization 
+#'
+#' This function implements model-assisted inference for local average treatment effects,
+#' using non-regularized calibrated estimation.
+#'
+#' For ploss="cal", calibrated estimation of the instrument propensity score (IPS) and weighted likelihood estimation of the treatment and outcome regression models are performed, similarly as in Sun and Tan (2020), but without regularization. 
+#' See also \strong{Details} for \code{\link{mn.nreg}}.
+#'
+#' @param y An \eqn{n} x \eqn{1} vector of observed outcomes.
+#' @param tr An \eqn{n} x \eqn{1} vector of treatment indicators (=1 if treated or 0 if untreated).
+#' @param iv An \eqn{n} x \eqn{1} vector of instruments (0 or 1).
+#' @param fx An \eqn{n} x \eqn{p} matix of covariates, used in the instrument propensity score model. 
+#' @param gx An \eqn{n} x \eqn{q_1} matix of covariates, used in the treatment regression models.
+#' @param hx An \eqn{n} x \eqn{q_2} matix of covariates, used in the outcome regression models. 
+#' @param ploss A loss function used in instrument propensity score estimation (either "ml" for likelihood estimation or "cal" for calibrated estimation).
+#' @param yloss A loss function used in outcome regression (either "gaus" for continuous outcomes or "ml" for binary outcomes).
+#' @param arm An integer 0, 1 or 2 indicating whether \eqn{\theta_0}, \eqn{\theta_1} or both are computed; see \strong{Details} for \code{\link{late.aipw}}.
+#' @param d1 Degree of truncated polynomials of fitted values from treatment regression to be included as regressors in the outcome regression (NULL: no adjustment, 0: piecewise constant, 1: piecewise linear etc..).  
+#' @param d2 Number of knots of fitted values from treatment regression to be included as regressors in the outcome regression, with knots specified as the \eqn{i}/(\code{d2}+1)-quantiles for \eqn{i}=1,...,\code{d2}.
+#' @param off A \eqn{2} x \eqn{1} vector of offset values (e.g., the true values in simulations) used to calculate the z-statistics from augmented IPW estimation.
+#'
+#'
+#' @return
+#' \item{ips}{A list containing the results from fitting the instrument propensity score models by \code{\link{glm.nreg}}.}
+#' \item{mfp}{An \eqn{n} x \eqn{2} matrix of fitted instrument propensity scores for \code{iv}=0 (first column) and \code{iv}=1 (second column).}
+#' \item{tps}{A list containing the results from fitting the treatment regression models by \code{\link{glm.nreg}}.}
+#' \item{mft}{An \eqn{n} x \eqn{2} matrix of fitted treatment regression models for \code{iv}=0 (first column) and \code{iv}=1 (second column).}
+#' \item{or}{A list containing the results from fitting the outcome regression models by \code{\link{glm.nreg}}.}
+#' \item{mfo}{An \eqn{n} x \eqn{4} matrix of fitted outcome regression models for for \code{iv}=0, \code{tr}=0 (first column), \code{iv}=0, \code{tr}=1 (second column), \code{iv}=1, \code{tr}=0 (third column) and  \code{iv}=1, \code{tr}=1 (fourth column). Two columns are set to \code{NA} if \code{arm}=0 or 1.}
+#' \item{est}{A list containing the results from augmented IPW estimation by \code{\link{late.aipw}}.}
+#'
+#' @references
+#'
+#' Tan, Z. (2006) Regression and weighting methods for causal inference using instrumental variables, Journal of the American Statistical Association, 101, 1607–1618.
+#'
+#' Sun, B. and Tan, Z. (2020) High-dimensional model-assisted inference for local average treatment effects with instrumental variables, arXiv:2009.09286.
+#'
+#' @examples 
+#' data(simu.iv.data)
+#' n <- dim(simu.iv.data)[1]
+#' p <- dim(simu.iv.data)[2]-3
+#' 
+#' y <- simu.iv.data[,1]
+#' tr <- simu.iv.data[,2]
+#' iv <- simu.iv.data[,3]
+#' x <- simu.iv.data[,3+1:p]
+#' x <- scale(x)
+#' 
+#' # include only 10 covariates
+#' x2 <- x[,1:10]
+#' 
+#' late.cal <- late.nreg(y, tr, iv, fx=x2, gx=x2, hx=x2, arm=2, d1=1, d2=3,
+#'                        ploss="cal", yloss="gaus")
+#' 
+#' matrix(unlist(late.cal$est), ncol=2, byrow=TRUE, 
+#' dimnames=list(c("ipw", "or", "est", "var", "ze", 
+#'  "late.est", "late.var", "late.ze"), c("theta1", "theta0")))
+#' 
+#' @export
+
+## Non-regularized estimation of LATE
+
+late.nreg <- function(y, tr, iv, fx, gx, hx, arm=2, d1=NULL, d2=NULL,
+                          ploss="cal", yloss="gaus", off=NULL) {
+
+  n <- length(tr)
+  z <- 1+iv
+
+  ps.nreg <- vector("list", 2)
+  tr.nreg <- vector("list", 2)
+  or.nreg <- vector("list", 2*2);
+
+  mfp <- matrix(NA, nrow=n, ncol=2)
+  mft <- matrix(NA, nrow=n, ncol=2)
+  mfo <- matrix(NA, nrow=n, ncol=(2*2));
+  
+  for (k in 2:1) {
+	
+    # propensity score
+    if (k==2 | ploss=="cal") {
+      ps.nreg[[k]] <- glm.nreg(y= z==k, x=fx, iw=NULL, loss=ploss)
+      mfp[,k] <- ps.nreg[[k]]$fit;
+
+    } else { # k==1 & ploss=="ml"
+      mfp[,1] <- 1-mfp[,2];
+    }
+
+	# treatment model
+    if (ploss=="ml") {
+       iw <- NULL
+       tr.nreg[[k]]     <- glm.nreg(tr[z==k], gx[z==k,], iw=iw, loss="ml")
+	 # binary treatment
+       mft[,k] <- expit( c( cbind(1,gx)%*%tr.nreg[[k]]$coef ) )
+	
+    }  else {  # "cal"
+        iw <- 1/mfp[z==k,k] -1 #glm.regu.path returns -xi when loss function is l^0_CAL()! 
+        tr.nreg[[k]] <- glm.nreg(tr[z==k], gx[z==k,], iw=iw, loss="ml")
+     	  # binary treatment
+        mft[,k] <- expit( c( cbind(1,gx)%*%tr.nreg[[k]]$coef ) )
+	}
+	 
+	# build h(X)
+	if (sd(mft[,k])!=0 & !is.null(d1) & !is.null(d2)) {
+	  	psi.spl = tp(mft[,k],degree=d1, k=(d1+d2));
+		hx=cbind(hx,psi.spl$X,psi.spl$Z);		
+	}
+
+  }
+  
+  # outcome model
+
+  for (k in 2:1) {
+    if (ploss=="ml") {
+    	iw <- NULL
+      if (! arm==1) {or.nreg[[2*k-1]] <- glm.nreg(y[z==k & tr==0], hx[z==k & tr==0,], iw=iw, loss=yloss)}
+      if (! arm==0) {or.nreg[[2*k]]   <- glm.nreg(y[z==k & tr==1], hx[z==k & tr==1,], iw=iw, loss=yloss)}					 
+    }  else {  # "cal"
+        iw <- 1/mfp[z==k,k] -1 #glm.regu.path returns -xi when loss function is l^0_CAL()! 
+     	eta0 <- 1-mft[z==k,k];
+        iwt0 <- iw*eta0;
+        if (! arm==1) {or.nreg[[2*k-1]] <- glm.nreg(y[z==k]*(1-tr[z==k])/eta0, hx[z==k,], iw=iwt0, loss=yloss)}
+	    eta1 <- 1-eta0;
+        iwt1 <- iw*eta1;
+        if (! arm==0) {or.nreg[[2*k]]  <- glm.nreg(y[z==k]*tr[z==k]/eta1, hx[z==k,], iw=iwt1, loss=yloss)}
+    }
+    if (yloss=="gaus") {     
+	    if (! arm==1) {mfo[,(2*k-1)] <- c( cbind(1,hx)%*%or.nreg[[2*k-1]] $coef )};	
+        if (! arm==0) {mfo[,(2*k)]   <- c( cbind(1,hx)%*%or.nreg[[2*k]] $coef)};
+    } else { 
+	
+	  # binary y
+        if (! arm==1) {mfo[,(2*k-1)] <- expit( c( cbind(1,hx)%*%or.nreg[[2*k-1]] $coef ) )};
+        if (! arm==0) {mfo[,(2*k)]   <- expit( c( cbind(1,hx)%*%or.nreg[[2*k]] $coef ) )};
+    }
+  }
+
+  # LATE estimation
+  out.late <-late.aipw(y, tr, iv, mfp=mfp, mft=mft, mfo=mfo, off=off);
+  if (arm==1) {out.late$ipw[2]<- NA}
+  if (arm==0) {out.late$ipw[1]<- NA}
+  list(ips=ps.nreg, mfp=mfp, tps=tr.nreg, mft=mft, or=or.nreg, mfo=mfo, est=out.late);
+
+}
+
+
+
+
+#' Model-assisted inference for local average treatment effects along regularization paths
+#'
+#' This function implements model-assisted inference for local average treatment effects (LATEs) using regularized calibrated estimation along regularization paths for instrument propensity score (IPS) estimation, 
+#' while based on cross validation for the treatment and outcome regressions.
+#'
+#'
+#' @param fold A vector of length 3, with the second and third components giving the fold number for cross validation in the treatment and outcome regressions respectively. The first component is not used.
+#' @param nrho A vector of length 3 giving the number of tuning parameters in a regularization path for IPS estimation and that in cross validation for the treatment and outcome regressions.
+#' @param rho.seq A list of two vectors giving the tuning parameters for IPS estimation (first vector), treatment (second vector) and outcome (third vector) regressions.
+#' @param y An \eqn{n} x \eqn{1} vector of observed outcomes.
+#' @param tr An \eqn{n} x \eqn{1} vector of treatment indicators (=1 if treated or 0 if untreated).
+#' @param iv An \eqn{n} x \eqn{1} vector of instruments (0 or 1).
+#' @param fx An \eqn{n} x \eqn{p} matix of covariates, used in the instrument propensity score model. 
+#' @param gx An \eqn{n} x \eqn{q_1} matix of covariates, used in the treatment regression models. In theory, \code{gx} should be a subvector of \code{gx}, hence \eqn{p\leq q_1}.
+#' @param hx An \eqn{n} x \eqn{q_2} matix of covariates, used in the outcome regression models. In theory, \code{hx} should be a subvector of \code{gx}, hence \eqn{p\leq q_2}. 
+#' @param ploss A loss function used in instrument propensity score estimation (either "ml" for likelihood estimation or "cal" for calibrated estimation).
+#' @param yloss A loss function used in outcome regression (either "gaus" for continuous outcomes or "ml" for binary outcomes).
+#' @param arm An integer 0, 1 or 2 indicating whether \eqn{\theta_0}, \eqn{\theta_1} or both are computed; see \strong{Details} for \code{\link{late.aipw}}.
+#' @param d1 Degree of truncated polynomials of fitted values from treatment regression to be included as regressors in the outcome regression (NULL: no adjustment, 0: piecewise constant, 1: piecewise linear etc.).  
+#' @param d2 Number of knots of fitted values from treatment regression to be included as regressors in the outcome regression, with knots specified as the \eqn{i}/(\code{d2}+1)-quantiles for \eqn{i}=1,...,\code{d2}.
+#' @param off A \eqn{2} x \eqn{1} vector of offset values (e.g., the true values in simulations) used to calculate the z-statistics from augmented IPW estimation.
+#' @param ... Additional arguments to \code{\link{glm.regu.cv}} and \code{\link{glm.regu.path}}.
+#'
+#' @return
+#' \item{ips}{A list of 2 objects, giving the results from fitting the IPS models by \code{\link{glm.regu.path}} for \code{iv}=0 (first) and \code{iv}=1 (second).}
+#' \item{mfp}{A list of 2 matrices of fitted instrument propensity scores, along the IPS regularization path, for \code{iv}=0 (first matrix) and \code{iv}=1 (second matrix).}
+#' \item{tps}{A list of 2 lists of objects for \code{iv}=0 (first) and \code{iv}=1 (second), where each object gives the results from fitting the treatment regression models by \code{\link{glm.regu.cv}} for an IPS tuning parameter.}
+#' \item{mft}{A list of 2 matrices of fitted treatment regression models based on cross validation, along the IPS regularization path, for \code{iv}=0 (first matrix) and \code{iv}=1 (second matrix).}
+#' \item{or}{A list of 4 lists of objects for \code{iv}=0, \code{tr}=0 (first), \code{iv}=0, \code{tr}=1 (second), \code{iv}=1, \code{tr}=0 (third) and  \code{iv}=1, \code{tr}=1 (fourth), containing the results from fitting the outcome regression models by \code{\link{glm.regu.cv}}.}
+#' \item{mfo}{A list of 4 matrices of fitted outcome regression models based on cross validation, along the IPS regularization path, for \code{iv}=0, \code{tr}=0 (first), \code{iv}=0, \code{tr}=1 (second), \code{iv}=1, \code{tr}=0 (third) and  \code{iv}=1, \code{tr}=1 (fourth). Two matrices are set to \code{NA} if \code{arm}=0 or 1.}
+#' \item{est}{A list containing the results from augmented IPW estimation by \code{\link{late.aipw}}.}
+#' \item{rho}{A vector of tuning parameters leading to converged results in IPS estimation.}
+#'
+#'
+#'
+#' @references
+#'
+#' Sun, B. and Tan, Z. (2020) High-dimensional model-assisted inference for local average treatment effects with instrumental variables, arXiv:2009.09286.
+#'
+#' @examples 
+#' \donttest{
+#' data(simu.iv.data)
+#' n <- dim(simu.iv.data)[1]
+#' p <- dim(simu.iv.data)[2]-3
+#' 
+#' y <- simu.iv.data[,1]
+#' tr <- simu.iv.data[,2]
+#' iv <- simu.iv.data[,3]
+#' x <- simu.iv.data[,3+1:p]
+#' x <- scale(x)
+#' 
+#' 
+#' late.path.rcal <- late.regu.path(fold=5*c(0,1,1), nrho=(1+10)*c(1,1,1), rho.seq=NULL,
+#'                    y, tr, iv, fx=x, gx=x, hx=x, arm=2, d1=1, d2=3, ploss="cal", yloss="gaus")
+#'
+#'
+#' late.path.rcal$est
+#' }
+#'
+#' @export
+
+late.regu.path <- function(fold, nrho=NULL, rho.seq=NULL, y, tr, iv, fx, gx, hx, arm=2, d1=NULL, d2=NULL,
+                          ploss="cal", yloss="gaus", off=NULL, ...) {
+
+  n <- length(tr)
+  z <- 1+iv
+
+  ps.regu <- vector("list", 2)
+  tr.regu <- vector("list", 2)
+  or.regu <- vector("list", 2*2)
+
+  mfp.all <- vector("list", 2)
+  mft.all <- vector("list", 2)
+  mfo.all <- vector("list", 2*2)
+
+  for (k in 2:1) {
+	
+    # propensity score
+    if (k==2 | ploss=="cal") {
+
+      ps.regu[[k]] <- glm.regu.path(nrho=nrho[1], rho.seq=rho.seq[[1]], y= z==k, x=fx, 
+                                    iw=NULL, loss=ploss,...)
+
+      mfp.all[[k]] <- ps.regu[[k]] $fit.all[, !ps.regu[[k]]$non.conv, drop=F]
+
+	  
+    } else { # k==1 & ploss=="ml"
+
+      mfp.all[[1]] <- 1-mfp.all[[2]]
+
+    }
+
+    # treatment regression
+    tr.regu[[k]] <- vector("list", dim(mfp.all[[k]])[2])
+    mft.all[[k]] <- matrix(NA, nrow=n, ncol=dim(mfp.all[[k]])[2])
+
+    for (j in 1:dim(mfp.all[[k]])[2]) {
+
+      if (ploss=="ml") {
+         iw <- NULL
+
+         if (j==1) {
+            tr.regu[[k]][[j]] <- glm.regu.cv(fold=fold[2], nrho=nrho[2], rho.seq=rho.seq[[2]], tr[z==k], gx[z==k,], 
+                                           iw=iw, loss="ml", ...)
+          } else {
+            tr.regu[[k]][[j]] <- tr.regu[[k]][[1]]
+          }
+
+      }  else {  # "cal"
+          iw <- 1/mfp.all[[k]][z==k,j] -1 #glm.regu.path returns -xi when loss function is l^0_CAL()! 
+          tr.regu[[k]][[j]]<- glm.regu.cv(fold=fold[2], nrho=nrho[2], rho.seq=rho.seq[[2]], tr[z==k], gx[z==k,], 
+                                         iw=iw, loss="ml", ...)
+      }
+
+      # binary treatment
+      mft.all[[k]][,j]  <- expit( c( cbind(1,gx)%*%tr.regu[[k]][[j]]$sel.bet[,1] ) )
+    }	
+  }
+  
+  # outcome regression
+   
+  for (k in 2:1) {
+
+    or.regu[[2*k-1]] <- vector("list", dim(mfp.all[[k]])[2]*2)
+    mfo.all[[2*k-1]] <- matrix(NA, nrow=n, ncol=dim(mfp.all[[k]])[2]*2)
+
+    or.regu[[2*k]] <- vector("list", dim(mfp.all[[k]])[2]*2)
+    mfo.all[[2*k]] <- matrix(NA, nrow=n, ncol=dim(mfp.all[[k]])[2]*2)
+
+    for (j in 1:dim(mfp.all[[k]])[2]) {
+
+       # build h(x)
+       for (d in 1:2) {
+         if (sd(mft.all[[d]][,j])!=0  & !is.null(d1) & !is.null(d2)) {
+	       psi.spl = tp(mft.all[[d]][,j],degree=d1, k=(d1+d2));
+	       hx.aug=cbind(hx,psi.spl$X,psi.spl$Z);
+         } else {
+		   hx.aug=hx;
+		 }
+       }
+
+       if (ploss=="ml") {
+    	  iw <- NULL
+          if (! arm==1) {or.regu[[2*k-1]][[j]] <- glm.regu.cv(fold=fold[3], nrho=nrho[3], rho.seq=rho.seq[[3]], y[z==k & tr==0], hx.aug[z==k & tr==0,], 
+                                         iw=iw, loss=yloss, ...)}
+          if (! arm==0) {or.regu[[2*k]][[j]]   <- glm.regu.cv(fold=fold[3], nrho=nrho[3], rho.seq=rho.seq[[3]], y[z==k & tr==1], hx.aug[z==k & tr==1,], 
+                                         iw=iw, loss=yloss, ...)}
+       } else {  # "cal"
+
+          iw <- 1/mfp.all[[k]][z==k,j] -1 #glm.regu.path returns -xi when loss function is l^0_CAL()! 
+          eta0 <- 1-mft.all[[k]][z==k,j];
+          iwt0 <- iw*eta0;
+          if (! arm==1) {or.regu[[2*k-1]][[j]]  <- glm.regu.cv(fold=fold[3], nrho=nrho[3], rho.seq=rho.seq[[3]], y[z==k]*(1-tr[z==k])/eta0, hx.aug[z==k,], 
+                                            iw=iwt0, loss=yloss, ...)}
+	  eta1 <- 1-eta0;
+          iwt1 <- iw*eta1;
+          if (! arm==0) {or.regu[[2*k]][[j]]   <- glm.regu.cv(fold=fold[3], nrho=nrho[3], rho.seq=rho.seq[[3]], y[z==k]*tr[z==k]/eta1, hx.aug[z==k,], 
+                                            iw=iwt1, loss=yloss, ...)}
+       }
+
+       if (yloss=="gaus") {  
+	  if (! arm==1) {mfo.all[[2*k-1]][,j]<-  c( cbind(1,hx.aug)%*%or.regu[[2*k-1]][[j]]$sel.bet[,1] )};
+          if (! arm==0) {mfo.all[[2*k]][,j]  <-  c( cbind(1,hx.aug)%*%or.regu[[2*k]][[j]]$sel.bet[,1] )};
+       } else { 
+	  # binary y
+          if (! arm==1) {mfo.all[[2*k-1]][,j]<- expit( c( cbind(1,hx.aug)%*%or.regu[[2*k-1]][[j]]$sel.bet[,1] ) )};
+          if (! arm==0) {mfo.all[[2*k]][,j]  <- expit( c( cbind(1,hx.aug)%*%or.regu[[2*k]][[j]]$sel.bet[,1] ) )};
+       }
+    }
+  }
+
+
+  # LATE estimation
+  num.conv <- c(dim(mfp.all[[1]])[2], dim(mfp.all[[2]])[2])
+  est.all <- array(NA, c(8, 2, min(num.conv)))
+  dimnames(est.all)[[1]] <- c("ipw", "or", "est", "var", "ze", "late.est", "late.var", "late.ze")
+
+  for (j in 1:min(num.conv)) {
+     est.all[,, min(num.conv)+1-j] <- 
+       matrix(unlist(late.aipw(y, tr, iv, mfp=cbind(mfp.all[[1]][,num.conv[1]+1-j],mfp.all[[2]][,num.conv[2]+1-j]), 
+          mft=cbind(mft.all[[1]][,num.conv[1]+1-j],mft.all[[2]][,num.conv[2]+1-j]), 
+          mfo=cbind(mfo.all[[1]][,num.conv[1]+1-j],mfo.all[[2]][,num.conv[2]+1-j], 
+                    mfo.all[[3]][,num.conv[1]+1-j],mfo.all[[4]][,num.conv[2]+1-j]), off=off)), ncol=2,byrow=TRUE)
+	
+     if (arm==1) {est.all[1,2, min(num.conv)+1-j]<- NA}
+     if (arm==0) {est.all[1,1, min(num.conv)+1-j]<- NA} 
+  }
+
+  list(ips=ps.regu, mfp=mfp.all, tps=tr.regu, mft=mft.all, or=or.regu, mfo=mfo.all, est=est.all,
+       rho=ps.regu[[2]]$rho[nrho[1]-min(num.conv) +1:min(num.conv)]) #ps.regu$rho[[1]] is NULL if ploss=="ml"
+
+}
+
+
+#######################################################
+# These functions are copied from the retired R
+# package 'amer', written by Fabian Scheipl (fabian.scheipl@googlemail.com)
+# and 'cplm' by Yanwei (Wayne) Zhang (actuary_zhang@hotmail.com)
+#######################################################
+
+expand.call <-
+  function(call = sys.call(sys.parent(1)))
+  {
+    #given args:
+    ans <- as.list(call)
+    # ans1 <- ans[[1]]
+    # ans <- lapply(ans[-1], eval, envir = sys.frame(sys.parent(2)))
+    # ans <- c(ans1, ans)
+    
+    #possible args:
+    frmls <- formals(safeDeparse(ans[[1]]))
+    #remove formal args with no presets:
+    frmls <- frmls[!sapply(frmls, is.symbol)]
+    
+    add <- which(!(names(frmls) %in% names(ans)))
+    return(as.call(c(ans, frmls[add])))
+  }
+
+
+safeDeparse <- function(expr){
+  ret <- paste(deparse(expr), collapse="")
+  #rm whitespace
+  gsub("[[:space:]][[:space:]]+", " ", ret)
+}
+
+
+tp <-
+  function(x, degree=1, k = 15, by=NULL, allPen = FALSE, varying = NULL, diag=FALSE,
+           knots= quantile(x, probs = (1:(k - degree))/(k - degree  + 1)), centerscale=NULL, scaledknots=FALSE)
+  {
+    call <- as.list(expand.call(match.call()))
+    
+    stopifnot(is.numeric(x), is.factor(by)||is.null(by), is.numeric(varying)||is.null(varying), degree >= 0)
+    
+    degree <- as.integer(degree); call$degree <- degree
+    
+    knots <- eval(knots)
+    if(is.null(centerscale)){
+      x <- scale(x)
+      #make sure prediction data uses the same center/scale as the data used to fit the model:
+      call$centerscale <- c(attr(x, "scaled:center"),attr(x, "scaled:scale"))
+      x <- as.vector(x)
+    } else x <- (x - centerscale[1])/centerscale[2]
+    if(!scaledknots){
+      knots <- (knots - call$centerscale[1])/call$centerscale[2]
+      call$scaledknots <- TRUE
+    }	
+    
+    if(length(unique(knots))!=length(knots)) warning("duplicate knots detected and removed.")
+    knots <- sort(unique(knots))
+    
+    call$knots <- knots
+    if(k != length(knots)+ degree){
+      k <- length(knots) + degree; call$k <- k
+      warning("set k to ", k," to conform with given knots and degree.")
+    }
+    if((knots[1]<min(x)||(knots[k-degree]>max(x)))) warning("knots outside range of variable.")
+    
+    if(is.null(by) && allPen) stop("allPen = TRUE only makes sense for smooths with a by-variable.")
+    
+    #design for unpenalised part: global polynomial trends (no intercept)
+    if(degree>0){	
+      X <- outer(x, 1:degree, "^")#poly(x, degree)
+      #colnames(X) <- paste(as.character(call$x),".fx",1:NCOL(X),sep="")
+    } else{
+      X <- matrix(nrow=length(x), ncol=0)
+    }	
+    #design for penalised part: 
+    Z <- outer(x,knots,"-")^degree*outer(x,knots,">")
+    
+    
+    res <- list(X=X, Z=Z, knots=knots)
+    attr(res, "call") <- as.call(call)
+    
+    return(res)
+  }
+
+
+
+
+

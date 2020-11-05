@@ -32,17 +32,17 @@
 \def\tr{\mathrm{tr}}
 \def\T{{ \mathrm{\scriptscriptstyle T} }}
 
-%\VignetteIndexEntry{RCAL vignette}
+%\VignetteIndexEntry{A Vignette for ATE Estimation}
 
 \begin{document}
 
 \begin{center}
-{\bf\large A Vignette for RCAL (version 1.0)}
+{\bf\large A Vignette for ATE Estimation}
 
 \vspace{.15in} Zhiqiang Tan\footnotemark[1]
 
 %\vspace{.05in}
-February 2019
+February 2019 (revised October 2020)
 \end{center}
 
 \footnotetext[1]{Department of Statistics, Rutgers University. Address: 110 Frelinghuysen Road,
@@ -50,10 +50,11 @@ Piscataway, NJ 08854. E-mail: ztan@stat.rutgers.edu.}
 
 \vspace{-.4in}\section{Introduction}\vspace{-.1in}
 
-The R package \texttt{RCAL} (version 1.0) can be used for two main tasks:
+The R package \texttt{RCAL} (version 2.0) can be used for three main tasks:
 \begin{itemize}\setlength{\itemsep}{-.1in}
 \item to estimate the mean of an outcome in the presence of missing data,
-\item to estimate the average treatment effects in causal inference.
+\item to estimate the average treatment effects (ATE) in causal inference,
+\item to estimate the local average treatment effects (LATE) in causal inference. 
 \end{itemize}
 There are 3 high-level functions provided for the first task:
 \begin{itemize}\setlength{\itemsep}{-.1in}
@@ -63,11 +64,10 @@ There are 3 high-level functions provided for the first task:
 \end{itemize}
 The first function \texttt{mn.nreg} is appropriate only in relatively low-dimensional settings,
 whereas the functions \texttt{mn.regu.cv} and \texttt{mn.regu.path} are designed to deal with high-dimensional data (namely, 
-the number of covariates close to or greater than the sample size). 
-In parallel, there are 3 functions for the second task, \texttt{ate.nreg}, \texttt{ate.regu.cv}, and \texttt{ate.regu.path}.
+the number of covariates close to or greater than the sample size). In parallel, there are 3 functions for estimating the ATE in the second task, \texttt{ate.nreg}, \texttt{ate.regu.cv}, and \texttt{ate.regu.path}.
 These functions can also be used to perform inference for the average treatment effects on the treated or on the untreated.
-Currently, the treatment is assumed to be binary (i.e., untreated or treated). 
-Extensions to multi-valued treatments will be incorporated in later versions. 
+Currently, the treatment is assumed to be binary (i.e., untreated or treated). Extensions to multi-valued treatments will be incorporated in later versions. Estimation of LATE is discussed in a separate vignette. 
+
 
 The package also provides lower-level functions, including \texttt{glm.nreg} to implement non-regularized M-estimation and \texttt{glm.regu} to 
 implement Lasso regularized M-estimation for fitting generalized linear models currently with continuous or binary outcomes. 
@@ -76,7 +76,7 @@ for solving least-squares Lasso problems.
 
 \section{An example}
 
-We illustrate the use of the package on a simulated dataset as in Tan (2019), Section 4.
+We illustrate the use of the package on a simulated dataset as in Tan (2020b), Section 4.
 The dataset, \texttt{simu.data}, is included as part of the package.
 
 <<read.data>>=
@@ -96,7 +96,7 @@ the remaining 200 columns represent covariates.
 
 <<>>=
 n <- dim(simu.data)[1]
-p <- dim(simu.data)[2]-2
+p <- 100 # include the first 100 covariates due to CRAN time constraint
 
 y <- simu.data[,1]
 tr <- simu.data[,2]
@@ -142,8 +142,8 @@ For each individual $i$, the potential outcome $Y^1_i$ with the treatment is the
 or missing otherwise. Similarly, the potential outcome $Y^0_i$ without the treatment is observed if treatment variable $T_i$ is 0, or missing otherwise. 
 To estimate the means of the potential outcomes amounts to estimation of population means with missing data. 
 
-In this section, we consider the problem of estimating the mean $\mu^1$ of potenital outcomes $Y^1_i$ with the treatment, which are observed when $T_i$ is 1
-but missing otherwise. The covariates $X_i$ are observed on all individuals in the sample, and can be relevant to the etimation of $\mu^1$ in two distinct ways. 
+In this section, we consider the problem of estimating the mean $\mu^1$ of potential outcomes $Y^1_i$ with the treatment, which are observed when $T_i$ is 1
+but missing otherwise. The covariates $X_i$ are observed on all individuals in the sample, and can be relevant to the estimation of $\mu^1$ in two distinct ways. 
 On one hand, the covariates $X_i$ can be associated with the treatment variable $T_i$. In other words, individuals with different
 covariates may differ in their probabilities of receiving the treatment, which are denoted as $\pi(X_i)$ and called propensity scores (Rosenbaum and Rubin 1983). 
 On the other hand, the covariates $X_i$ can also be associated with the outcome variable $Y_i$ in the treated group $\{T_i=1\}$.
@@ -164,22 +164,25 @@ Then the augmented IPW estimator of $\mu^1$ is applied (Robins et al. 1994):
 \begin{align*}
 \hat \mu^1_{\mbox{\tiny AIPW}} = \frac{1}{n} \sum_{i=1}^n \left[ \frac{T_i Y_i}{\hat\pi^1(X_i)} - \left\{ \frac{T_i}{\hat\pi^1(X_i)}-1\right\} \hat m^1(X_i) \right].
 \end{align*}
-For \texttt{ploss}$=$``cal", regularized calibrated estimation is performed with cross validation as in Tan (2017, 2019). The method then leads to model-assisted inference, in which confidence intervals are valid with high-dimensinoal data if the propensity score model is correctly specified but the outcome regression model may be misspecified. With linear outcome models, the inference is also doubly robust. For \texttt{ploss}$=$``ml", regularized maximum likelihood estimation is used (Belloni et al. 2014; Farrell 2015). In this case, standard errors are only shown to be valid if both the propensity score model and the outcome regression model are correctly specified.
+For \texttt{ploss}$=$``cal", regularized calibrated estimation is performed with cross validation as in Tan (2020a, 2020b). The method then leads to model-assisted inference, in which confidence intervals are valid with high-dimensional data if the propensity score model is correctly specified but the outcome regression model may be misspecified. With linear outcome models, the inference is also doubly robust. For \texttt{ploss}$=$``ml", regularized maximum likelihood estimation is used (Belloni et al. 2014; Farrell 2015). In this case, standard errors are only shown to be valid if both the propensity score model and the outcome regression model are correctly specified.
 
 For this example, both the propensity score and outcome regressions models are (slightly) misspecified, 
 by the design of the simulated data; see \texttt{help(simu.data)}.
-Nevertheless, regularized calibrated estimation yields an estimate $0.11$ with standard error $0.068$, whereas 
-regularized maximum likelihood estimation yields an estimate $0.089$ with standard error $0.069$.
+Nevertheless, regularized calibrated estimation yields an estimate $0.12$ with standard error $0.068$, whereas 
+regularized maximum likelihood estimation yields an estimate $0.094$ with standard error $0.071$.
 Both estimates are much closer to the true value 0, with smaller standard errors, than the unadjusted estimate.
 
 <<keep.source=TRUE>>==
 ## regularized calibrated estimation
+RNGversion('3.5.0')
 set.seed(0)   #this affects random split of data in cross validation
 mn.cv.rcal <- 
 mn.regu.cv(fold=5*c(1,1), nrho=(1+10)*c(1,1), rho.seq=NULL, y, tr, x,
            ploss="cal", yloss="gaus")
 unlist(mn.cv.rcal$est) 
 sqrt(mn.cv.rcal$est $var)
+mn.cv.rcal$ps$sel.nz[1]
+fp.cv.rcal <- mn.cv.rcal$ps$sel.fit[,1]
 
 ## regularized maximum likelihood estimation
 set.seed(0)   #this affects random split of data in cross validation
@@ -188,13 +191,15 @@ mn.regu.cv(fold=5*c(1,1), nrho=(1+10)*c(1,1), rho.seq=NULL, y, tr, x,
            ploss="ml", yloss="gaus")
 unlist(mn.cv.rml$est)
 sqrt(mn.cv.rml$est $var)
+mn.cv.rml$ps$sel.nz[1]
+fp.cv.rml <- mn.cv.rml$ps$sel.fit[,1]
 @
 
-The following shows how the same results can be obtained as above, but using the lower-level function \texttt{glm.regu.cv}
+The following codes show how the same results can be obtained as above, but using the lower-level function \texttt{glm.regu.cv}
 to perform regularized M-estimation for fitting propensity score and outcome regression models, and using the function 
 \texttt{mn.aipw} to compute the augmented IPW estimates. 
 
-<<keep.source=TRUE>>==
+<<keep.source=TRUE,eval=FALSE>>==
 ## regularized calibrated estimation
 set.seed(0)
 ps.cv.rcal <- 
@@ -240,7 +245,7 @@ it is desirable to reduce the following differences as much as possible given th
 \end{align*}
 where $\hat w_i = \{n \hat\pi^1(X_i)\}^{-1} $ and $X_{ji}$ denotes the $j$th component of $X_i$.
 If the covariates are standardized with sample means 0 and variances 1, then the above 
-gives the standardized calibration differences as in Tan (2017), Section 5.
+gives the standardized calibration differences as in Tan (2020a), Section 6.
 
 The following shows the calculation of such calibration differences using the function \texttt{mn.ipw}.
 The results are plotted in Figure~\ref{fig:std-diff}.
@@ -275,7 +280,7 @@ abline(c(0,1))
 @
 
 \begin{figure}[t!] 
-\caption{Standardized calibration differences and scattplot of propensity scores.}\label{fig:std-diff} 
+\caption{Standardized calibration differences and scatterplot of propensity scores.}\label{fig:std-diff} 
 \vspace{-.1in}
 \begin{center}
 <<fig=TRUE, echo=FALSE>>==
@@ -303,12 +308,12 @@ abline(c(0,1))
 \end{figure}
 
 The maximum standardized calibration differences from the two methods appear similar to each other.
-However, the number of nonzero coefficients estimated out of a total of 200 is 11 for regularized calibrated estimation,
-but much larger, 32, for regularized maximum likelihood estimation. 
+However, the number of nonzero coefficients estimated out of a total of 100 is 9 for regularized calibrated estimation,
+but much larger, 24, for regularized maximum likelihood estimation. 
 
 For further comparison, the following uses the function \texttt{glm.regu.path} to compute fitted propensity scores over regularization paths. 
 Figure~\ref{fig:std-diff-path} shows how the maximum absolute standardized differences vary against the numbers of nonzero coefficients and relative variances,
-similarly as in Tan (2017), Section 5.
+similarly as in Tan (2020a), Section 6.
 In this example, it seems impossible for regularized maximum likelihood estimation to reduce calibration differences to lower than 0.05, even
 with decreased Lasso penalties and increased numbers of nonzero coefficients and relative variance.
 
@@ -373,7 +378,7 @@ legend(1.0,.3, c("RML","RCAL"), pch=c(1,4), cex=.6)
 
 \subsection{Estimation of average treatment effects}
 
-The following shows the use of the function \texttt{ate.regu.cv},
+The following codes show the use of the function \texttt{ate.regu.cv},
 to estimate the two means $(\mu^0, \mu^1)$ and the ATE, $\mu^1-\mu^0$.
 
 <<keep.source=TRUE>>==
@@ -386,7 +391,6 @@ matrix(unlist(ate.cv.rcal$est), ncol=2, byrow=T,
 dimnames=list(c("one", "ipw", "or", "est", "var", "ze", 
 "diff.est", "diff.var", "diff.ze"), c("untreated", "treated")))
 
-
 ## regularized maximum likelihood estimation
 set.seed(0)
 ate.cv.rml <- 
@@ -397,9 +401,13 @@ dimnames=list(c("one", "ipw", "or", "est", "var", "ze",
 "diff.est", "diff.var", "diff.ze"), c("untreated", "treated")))
 @
 
+
 \vspace{.2in}
 \centerline{\bf REFERENCES}
 \begin{description}
+
+\item Angrist, J.D., Imbens, G.W. and Rubin, D.B. (1996) Identification of causal effects using instrumental
+variables, {\em Journal of the American Statistical Association}, 91, 444–455.
 
 \item Belloni, A., Chernozhukov, V., and Hansen, C. (2014) Inference on treatment effects after selection among high-dimensional controls, {\em Review of Economic Studies}, 81, 608-650.
 
@@ -413,9 +421,12 @@ dimnames=list(c("one", "ipw", "or", "est", "var", "ze",
 
 \item Rubin, D.B. (1974) Estimating causal effects of treatments in randomized and nonrandomized studies, {\em Journal of Educational Psychology}, 66, 688-701.
 
-\item Tan, Z. (2017) Regularized calibrated estimation of propensity scores with model misspecification and high-dimensional data, arXiv:1710.08074.
 
-\item Tan, Z. (2019) Model-assisted inference for treatment effects using regularized calibrated estimation with high-dimensional data, {\em Annals of Statistics}, to appear (preprint arXiv:1801.09817). 
+\item Tan, Z. (2020a) Regularized calibrated estimation of propensity scores with model misspecification and high-dimensional data, {\em Biometrika}, 107, 137–158.
+
+\item Tan, Z. (2020b) Model-assisted inference for treatment effects using regularized calibrated estimation with high-dimensional data, {\em Annals of Statistics}, 48, 811–837.
+
+
 \end{description}
 
 \end{document}

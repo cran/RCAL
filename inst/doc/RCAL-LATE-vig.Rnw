@@ -1,0 +1,556 @@
+\documentclass[12pt,oneside]{article}
+\usepackage{epsfig,lscape}
+\usepackage{amssymb,amsfonts,amsmath,amsthm}
+\usepackage{rotating}
+
+\usepackage[utf8]{inputenc}
+
+% page style
+\pagestyle{plain}
+% page format
+\setlength{\oddsidemargin}{.1in}
+\setlength{\evensidemargin}{0in}
+\setlength{\topmargin}{-.5in}   %%%
+\setlength{\textwidth}{6in}
+\setlength{\textheight}{9in}
+% paragraph format
+\setlength{\parindent}{3ex}
+\setlength{\parskip}{0ex}
+\renewcommand{\baselinestretch}{1.5}
+
+\def\me{\mathrm e}
+\def\mi{\mathrm i}
+\def\dif{\mathrm d}
+\def\diag{\mbox{diag}}
+
+%\def\E{\mathrm E}
+\def\var{\mathrm{var}}
+\def\cov{\mathrm{cov}}
+\def\pr{\mathrm{pr}}
+\def\N{\mbox{N}}
+
+\def\tr{\mathrm{tr}}
+\def\T{{ \mathrm{\scriptscriptstyle T} }}
+\newcommand{\independent}{\coprod}
+
+
+%\VignetteIndexEntry{A Vignette for LATE Estimation}
+
+\begin{document}
+
+\sloppy
+
+\begin{center}
+{\bf\large A Vignette for LATE Estimation}
+
+\vspace{.15in} Baoluo Sun\footnotemark[1] \& Zhiqiang Tan\footnotemark[2]
+
+%\vspace{.05in}
+October 2020
+\end{center}
+
+\footnotetext[1]{Department of Statistics and Applied Probability, National University of Singapore, Singapore, SG 117546. Email: stasb@nus.edu.sg.} 
+\footnotetext[2]{Department of Statistics, Rutgers University. Address: 110 Frelinghuysen Road,
+Piscataway, NJ 08854. E-mail: ztan@stat.rutgers.edu.}
+
+\vspace{-.4in}\section{Introduction}\vspace{-.1in}
+
+Identification of the average treatment effect (ATE) relies on treatment unconfoundedness given the measured covariates. In the presence of unmeasured confounding, an alternative approach makes use of an exogenous experimental called an instrumental variable (IV) to identify under certain conditions the local average treatment effect (LATE), defined as the average treatment effect among individuals whose treatment status would be manipulated through the change of the IV (Angrist et al. 1996). The R package \texttt{RCAL} (version 2.0) includes three functions for estimating LATE, similarly to estimation of ATE discussed in a separate vignette:
+\begin{itemize}\setlength{\itemsep}{-.1in}
+\item \texttt{late.nreg}: inference using non-regularized calibrated estimation,
+\item \texttt{late.regu.cv}: inference using regularized calibrated estimation based on cross validation,
+\item \texttt{late.regu.path}: inference using regularized calibrated estimation along a regularization path. 
+\end{itemize} 
+Both the treatment and IV are assumed to be binary. Extensions to multi-valued treatments and 
+IVs will be incorporated in later versions. 
+
+\section{An example}
+
+We illustrate the use of the package on a simulated dataset as in Sun and Tan (2020), Section 4.
+The dataset, \texttt{simu.iv.data}, is included as part of the package.
+
+<<read.iv.data>>=
+library(RCAL)
+
+data(simu.iv.data)
+@
+
+The following shows the first 10 rows and the first 6 columns of the dataset, which is of size $800 \times 203$. 
+
+<<>>=
+simu.iv.data[1:10, 1:6]
+@
+
+The first column represents an observed outcome \texttt{y}, the second column represents a binary treatment \texttt{tr}, 
+the third column represents a binary IV \texttt{iv}, and the remaining 200 columns represent covariates. 
+
+<<>>=
+n <- dim(simu.iv.data)[1]
+p <- 100 # include the first 100 covariates due to CRAN time constraint
+
+y <- simu.iv.data[,1]
+tr <- simu.iv.data[,2]
+iv <- simu.iv.data[,3]
+x <- simu.iv.data[,3+1:p]
+x <- scale(x)
+@
+
+To examine the data, Figure~\ref{fig:boxplots2} shows the boxplots of the first 6 covariates in the \texttt{iv}=0 and \texttt{iv}=1 groups, Figure~\ref{fig:boxplots-treatment} shows the boxplots of the first 6 covariates in the untreated and treated groups, and Figure~\ref{fig:scatterplots-outcome} shows the scatterplots of observed outcomes and the first 6 covariates in the treated group.
+
+\begin{figure}
+\caption{Boxplots of covariates in the \texttt{iv}=0 and \texttt{iv}=1 groups.}  \label{fig:boxplots2} 
+\vspace{-.1in}
+\begin{center}
+<<fig=TRUE, echo=FALSE>>=
+par(mfrow=c(3,2))
+par(mar=c(4,4,2,2))
+for (j in 1:6) {
+  boxplot(x[,j] ~ iv, ylab=paste("covariate x", j, sep=""), xlab="instrument")
+}
+@
+\end{center}
+\end{figure}
+
+\begin{figure}[t!] 
+\caption{Boxplots of covariates in the untreated and treated groups.}  \label{fig:boxplots-treatment} 
+\vspace{-.1in}
+\begin{center}
+<<fig=TRUE, echo=FALSE>>=
+par(mfrow=c(3,2))
+par(mar=c(4,4,2,2))
+for (j in 1:6) {
+  boxplot(x[,j] ~ tr, ylab=paste("covariate x", j, sep=""), xlab="treatment")
+}
+@
+\end{center}
+\end{figure}
+
+\begin{figure}[t!] 
+\caption{Scatterplots of observed outcomes and covariates in the treated group.}\label{fig:scatterplots-outcome} 
+\vspace{-.1in}
+\begin{center}
+<<fig=TRUE, echo=FALSE>>=
+par(mfrow=c(3,2))
+par(mar=c(4,4,2,2))
+for (j in 1:6) {
+  plot(x[tr==1,j], y[tr==1], ylab="y", xlab=paste("covariate x", j, sep=""))
+}
+@
+\end{center}
+\end{figure}
+
+The dataset is generated from a parametric latent index model conditionally on covariates as described in \texttt{help(simu.iv.data)}. The true value of LATE is 1 by design. Vytlacil (2002) and Tan (2006) showed that the structural assumptions for identification of LATE are equivalent to the assumptions of a nonparametric latent index model. Ignoring the covariates, the Wald estimator yields an estimate $1.48$ with standard error $0.766$. 
+
+<<>>=
+pi    <- mean(iv)
+del   <- iv/pi-(1-iv)/(1-pi);
+del.y <- mean(del*y);
+del.tr<- mean(del*tr);
+(w<- del.y/del.tr)  # point estimate
+
+g  <- mean((-iv/pi^2-(1-iv)/(1-pi)^2)*(y-w*tr))
+sqrt(mean((del*(y-w*tr)-g*(pi-iv))^2)/del.tr^2/n) # standard error
+@
+
+\subsection{Regularized estimation of LATE}
+
+We use the potential outcomes notation (Neyman 1990; Rubin 1974) to define quantities of causal interest. For $z, d\in \{0,1\}$ and each individual $i$, the potential treatment status $D_i(z)$ is the observed treatment $D_i$ if the instrument $Z_i$ takes on value $z$, and the potential outcome $Y_i({d,z})$ is the observed outcome $Y_i$ if the treatment and instrument $D_i$ and $Z_i$ take on values $d$ and $z$ respectively. The covariates $X_i$ are observed on all individuals in the sample. The two basic IV assumptions are instrument unconfoundedness and exclusion restriction $Y_i(d,1) = Y_i(d,0)$, henceforth denoted as $Y_i(d)$, for $d \in \{0,1\}$. Then under an additional monotonicity assumption and other technical conditions, the population LATE, $\theta=E\{Y(1) - Y(0) | D(1) > D(0)\}$, is identified from observed data nonparametrically (Angrist et al. 1996). 
+
+Tan (2006) derived identification formulae for the individual expectations $\theta_d=E\{Y(d)|D(1) > D(0)\}$ for $d \in \{0,1\}$, which can be informative in addition to the difference $\theta=\theta_1-\theta_0$ in applications. The formula for $\theta_1$ is
+\begin{equation}
+\theta_1=\frac{E\{ D(1)Y(1)\} -E\{ D(0)Y(1) \} }{E \{D(1)\} -E\{D(0)\}}, \label{eq:theta1}
+\end{equation}
+which is a ratio of two differences, depending on potential outcomes and treatments. By instrument unconfoundedness, each expectation in the numerator and denominator of (\ref{eq:theta1}) can be estimated through augmented IPW estimation based on the observed data $(O_1,\ldots, O_n)$ where $O_i=(Y_i,D_i,Z_i,X_i)$, in parallel to related estimation methods under the assumption of treatment unconfoundedness (Robins et al. 1994; Tan 2007). For this purpose, several regression functions are involved. On one hand, the covariates $X_i$ can be associated with the IV $Z_i$, which is captured by the conditional probability $\pi(X_i)=P(Z_i=1|X_i)$ called the instrument propensity score (IPS) (Tan 2006). On the other hand, the covariates $X_i$ can also be associated with the treatment and outcome variables within each level of the instrument. Let $m_z(X_i) = P(D_i=1|Z_i=z,X_i)$ and $m_{1z}(X_i) = E( Y_i| D_i=1, Z=z,X_i)$, called the treatment regression function and the outcome regression function in the treated respectively for $z\in\{0,1\}$. 
+
+Let $\hat{\pi}_1$ and $\hat{\pi}_0$ be two possibly different versions of fitted values for the IPS, and let $\hat{m}_z$ and $\hat{m}_{1z}$ be the fitted treatment and outcome regression functions respectively for $z\in\{0,1\}$. The expectations $E\{D(1)\}$ and $E \{D(0)\}$ in (\ref{eq:theta1}) can be estimated by
+$ {n}^{-1} \sum_{i=1}^n \{\varphi_{\scriptscriptstyle D_1}(O_i;\hat{\pi}_1,\hat{m}_1) \}$
+and $ {n}^{-1} \sum_{i=1}^n \{ \varphi_{ \scriptscriptstyle D_0}(O_i;\hat{\pi}_0,\hat{m}_0)\}$ respectively, where 
+\begin{align}
+& \varphi_{ \scriptscriptstyle D_1}(O;\hat{\pi}_1,\hat{m}_1) = \frac{Z}{\hat{\pi}_1(X)} D-\left\{\frac{Z}{\hat{\pi}_1(X)}-1\right\}\hat{m}_1 (X),  \label{eq:phi-D1}\\
+& \varphi_{\scriptscriptstyle D_0}(O;\hat{\pi}_0,\hat{m}_0) = \frac{1-Z}{1-\hat{\pi}_0(X)} D-\left\{\frac{1-Z}{1-\hat{\pi}_0(X)}-1\right\}\hat{m}_0 (X). \label{eq:phi-D0}
+\end{align}
+The expectations $E \{ D(1)Y(1)\}$ and $E\{ D(0)Y(1) \}$ in (\ref{eq:theta1})  can be estimated by
+${n}^{-1} \sum_{i=1}^n \{\varphi_{\scriptscriptstyle D_1Y_{11}}(O_i;\hat{\pi}_1,\hat{m}_1, \hat{m}_{11}) \}$ and
+${n}^{-1} \sum_{i=1}^n \{\varphi_{\scriptscriptstyle D_0Y_{10}}(O_i;\hat{\pi}_0,\hat{m}_0, \hat{m}_{10}) \}$ respectively,
+where
+\begin{align}
+&  \varphi_{\scriptscriptstyle D_1Y_{11}}(O;\hat{\pi}_1,\hat{m}_1, \hat{m}_{11} )=
+\frac{Z}{\hat{\pi}_1(X)}  DY-\left\{\frac{Z}{\hat{\pi}_1(X)}-1\right\} \hat{m}_1 (X)\hat{m}_{11}(X) , \label{eq:phi-D1Y11} \\
+& \varphi_{\scriptscriptstyle D_0Y_{10}}(O;\hat{\pi}_0,\hat{m}_0, \hat{m}_{10} ) =
+\frac{1-Z}{1-\hat{\pi}_0(X)} DY -\left\{\frac{1-Z}{1-\hat{\pi}_0(X)}-1\right\}\hat{m}_0 (X)\hat{m}_{10} (X) . \label{eq:phi-D0Y10}
+\end{align}
+By (\ref{eq:theta1}), the resulting augmented IPW estimator of $\theta_1$ is
+\begin{align}
+\hat\theta_1 =
+\frac{{n}^{-1} \sum_{i=1}^n \{\varphi_{\scriptscriptstyle D_1Y_{11}}(O_i;\hat{\pi}_1,\hat{m}_1, \hat{m}_{11}) - \varphi_{\scriptscriptstyle D_0Y_{10}}(O_i;\hat{\pi}_0,\hat{m}_0, \hat{m}_{10})\}}
+{{n}^{-1} \sum_{i=1}^n \{\varphi_{\scriptscriptstyle D_1}(O_i;\hat{\pi}_1,\hat{m}_1) - \varphi_{\scriptscriptstyle D_0}(O_i;\hat{\pi}_0,\hat{m}_0)\}}. \label{eq:dr-phi}
+\end{align}
+\noindent Estimation of $\theta_0$ can be similarly handled but require fitted outcome regression functions in the untreated. 
+
+Two regularized methods are implemented by the function \texttt{late.regu.cv} for fitting IPS, treatment and outcome regressions. The fitted values are then substituted into (\ref{eq:dr-phi}) to estimate $\theta_1$ and similarly to estimate $\theta_0$. For \texttt{ploss}$=$``cal", regularized calibrated estimation of the IPS and regularized weighted likelihood estimation of the treatment and outcome regression models are performed. The method leads to model-assisted inference, in which condidence intervals are valid with high-dimensional data if the IPS model is correctly specified, but the treatment and outcome regression models may be misspecified (Sun and Tan 2020). For \texttt{ploss}$=$``ml", regularized maximum likelihood estimation is used (Chernozhukov et al. 2018). In this case, standard errors are only shown to be valid if the IPS, treatment and outcome models are all correctly specified.
+
+The following shows the results using the simulated dataset. Depending on \texttt{arm}$=$0, 1 or 2, the function \texttt{late.regu.cv} provides estimation of $\theta_0$, $\theta_1$ or both $(\theta_0,\theta_1)$ respectively.
+<<keep.source=TRUE>>==
+## regularized calibrated estimation
+RNGversion('3.5.0')
+set.seed(0) # this affects random split of data in cross validation
+late.cv.rcal <- 
+late.regu.cv(fold=5*c(1,1,1), nrho=(1+10)*c(1,1,1), rho.seq=NULL,
+y, tr, iv, fx=x, gx=x, hx=x, arm=2, d1=1, d2=3, ploss="cal", yloss="gaus")
+
+matrix(unlist(late.cv.rcal$est), ncol=2, byrow=TRUE,
+dimnames=list(c("ipw", "or", "est", "var", "ze",
+"late.est", "late.var", "late.ze"), c("theta1", "theta0")))
+
+## For comparison, we use the same set of models 
+## in regularized maximum likelihood estimation
+set.seed(0)
+late.cv.rml <- 
+late.regu.cv(fold=5*c(1,1,1), nrho=(1+10)*c(1,1,1), rho.seq=NULL,
+y, tr, iv, fx=x, gx=x, hx=x, arm=2, d1=1, d2=3, ploss="ml", yloss="gaus")
+
+matrix(unlist(late.cv.rml$est), ncol=2, byrow=TRUE,
+dimnames=list(c("ipw", "or", "est", "var", "ze",
+"late.est", "late.var", "late.ze"), c("theta1", "theta0")))
+@
+
+For this example, although the IPS, treatment and outcome regressions models using main effects of $X_i$ appear adequate based on Figures~\ref{fig:boxplots2}--\ref{fig:scatterplots-outcome}, they are all (slightly) misspecified by the design of the simulated data; see \texttt{help(simu.iv.data)}. Nevertheless, regularized calibrated estimation of LATE yields an estimate $0.96$ with standard error $0.72$, whereas regularized maximum likelihood estimation yields an estimate $0.78$ with standard error $0.69$. Both estimates are much closer to the true value 1, with smaller standard errors, than that of the Wald estimator.
+
+\subsection{Instrument propensity score for covariate calibration}
+
+Systematic differences in the covariates $X_i$ can exist between the $Z_i=1$ and $Z_i=0$ groups, and direct comparisons of observed treatments and outcomes from the two groups are not appropriate. The idea of inverse probability weighting is to reweight individuals in the $Z_i=1$ group by the inverse of IPS, in the hope that the  weighted averages of covariates in the $Z_i=1$ group are similar to or calibrated with the simple averages in the entire sample. The effect of calibration can be measured by the following differences:
+\begin{align}
+\frac{1}{n} \sum_{i=1}^n \left\{\frac{Z_i}{\hat\pi_1(X_i)}-1\right\} X_{ji} = 
+\sum_{i: \,Z_i=1, 1\le i \le n} \hat w_i X_{ji} - \frac{1}{n} \sum_{i=1}^n X_{ji},  \quad j=1,\ldots,p, \label{eq:diff}
+\end{align}
+where $\hat w_i = \{n \hat\pi_1(X_i)\}^{-1} $ and $X_{ji}$ denotes the $j$th component of $X_i$. If the covariates are standardized with sample means 0 and variances 1, then the above gives the standardized calibration differences as in Tan (2020a), Section 6.  Similar differences can be computed for the $Z_i=0$ group based on (\ref{eq:diff}) with $Z_i$ replaced by $1-Z_i$ and $\hat{\pi}_{1}$ replaced by $1-\hat{\pi}_{0}$.
+
+The following shows the calculation of such calibration differences based on fitted IPS returned by \texttt{late.regu.cv}.
+The results within the groups $\{i: \,Z_i=1, 1\le i \le n\}$ and $\{i: \,Z_i=0, 1\le i \le n\}$ are plotted in Figures~\ref{fig:std-diff1} and~\ref{fig:std-diff0} repectively.
+
+<<fig=FALSE, keep.source=TRUE>>==
+## Computation of standardized calibration differences 
+##               within iv=1 group
+fips.raw <- rep(mean(iv), n)   #constant propensity scores
+fips1.cv.rcal<-late.cv.rcal$mfp[,2]
+fips1.cv.rml <-late.cv.rml$mfp[,2]
+
+check1.raw <- mn.ipw(x, iv, fips.raw)
+check1.cv.rcal <- mn.ipw(x, iv, fips1.cv.rcal)
+check1.cv.rml <- mn.ipw(x, iv, fips1.cv.rml)
+
+par(mfrow=c(2,2))
+par(mar=c(4,4,2,2))
+plot(check1.raw$est, xlim=c(0,p), ylim=c(-.3,.3), 
+     xlab="", ylab="std diff", main="Raw") 
+abline(h=0)
+
+plot(check1.cv.rml$est, xlim=c(0,p), ylim=c(-.3,.3), 
+     xlab="", ylab="std diff", main="RML") 
+abline(h=0)
+abline(h=max(abs(check1.cv.rml$est)) *c(-1,1), lty=2)
+
+nz1.rml <- which(late.cv.rml$ips[[2]]$sel.bet[,1]!=0)-1
+text(nz1.rml, -0.3, "x", cex=1)
+length(nz1.rml)
+
+plot(check1.cv.rcal$est, xlim=c(0,p), ylim=c(-.3,.3), 
+     xlab="", ylab="std diff", main="RCAL") 
+abline(h=0)
+abline(h=max(abs(check1.cv.rcal$est)) *c(-1,1), lty=2)
+
+nz1.rcal <- which(late.cv.rcal$ips[[2]]$sel.bet[,1]!=0)-1
+text(nz1.rcal, -0.3, "x", cex=1)
+length(nz1.rcal)
+
+plot(fips1.cv.rml[iv==1], fips1.cv.rcal[iv==1], xlim=c(0,1), ylim=c(0,1), 
+     xlab="RML", ylab="RCAL", main="fitted probabilities")
+abline(c(0,1))
+
+## Computation of standardized calibration differences 
+##            within iv=0 group
+fips0.cv.rcal<-late.cv.rcal$mfp[,1]
+fips0.cv.rml <-late.cv.rml$mfp[,1]
+
+check0.raw <- mn.ipw(x, 1-iv, fips.raw)
+check0.cv.rcal <- mn.ipw(x, 1-iv, fips0.cv.rcal)
+check0.cv.rml <- mn.ipw(x, 1-iv, fips0.cv.rml)
+
+par(mfrow=c(2,2))
+par(mar=c(4,4,2,2))
+plot(check0.raw$est, xlim=c(0,p), ylim=c(-.3,.3), 
+     xlab="", ylab="std diff", main="Raw") 
+abline(h=0)
+
+plot(check0.cv.rml$est, xlim=c(0,p), ylim=c(-.3,.3), 
+     xlab="", ylab="std diff", main="RML") 
+abline(h=0)
+abline(h=max(abs(check0.cv.rml$est)) *c(-1,1), lty=2)
+
+nz0.rml <- which(late.cv.rml$ips[[2]]$sel.bet[,1]!=0)-1
+text(nz0.rml, -0.3, "x", cex=1)
+length(nz0.rml)
+
+plot(check0.cv.rcal$est, xlim=c(0,p), ylim=c(-.3,.3), 
+     xlab="", ylab="std diff", main="RCAL") 
+abline(h=0)
+abline(h=max(abs(check0.cv.rcal$est)) *c(-1,1), lty=2)
+
+nz0.rcal <- which(late.cv.rcal$ips[[1]]$sel.bet[,1]!=0)-1
+text(nz0.rcal, -0.3, "x", cex=1)
+length(nz0.rcal)
+
+plot(fips0.cv.rml[iv==0], fips0.cv.rcal[iv==0], xlim=c(0,1), ylim=c(0,1), 
+     xlab="RML", ylab="RCAL", main="fitted probabilities")
+abline(c(0,1))
+@
+
+\begin{figure}[t!] 
+\caption{Standardized calibration differences and scatterplot of fitted IPS within the group $\{i: \,Z_i=1, 1\le i \le n\}$. Marks (x) are plotted at the indices corresponding to 6 or 22 nonzero coefficients out of 100 in total in the IPS model fitted using regularized calibrated estimation (RCAL) or regularized maximum likelihood estimation (RML) respectively.}\label{fig:std-diff1} 
+\vspace{-.1in}
+\begin{center}
+<<fig=TRUE, echo=FALSE>>==
+
+par(mfrow=c(2,2))
+par(mar=c(4,4,2,2))
+plot(check1.raw$est, xlim=c(0,p), ylim=c(-.3,.3), 
+     xlab="", ylab="std diff", main="Raw") 
+abline(h=0)
+
+plot(check1.cv.rml$est, xlim=c(0,p), ylim=c(-.3,.3), 
+     xlab="", ylab="std diff", main="RML") 
+abline(h=0)
+abline(h=max(abs(check1.cv.rml$est)) *c(-1,1), lty=2)
+
+nz=which(late.cv.rml$ips[[2]]$sel.bet[,1]!=0)-1
+text(nz, -0.3, "x", cex=1)
+
+plot(check1.cv.rcal$est, xlim=c(0,p), ylim=c(-.3,.3), 
+     xlab="", ylab="std diff", main="RCAL") 
+abline(h=0)
+abline(h=max(abs(check1.cv.rcal$est)) *c(-1,1), lty=2)
+
+nz=which(late.cv.rcal$ips[[2]]$sel.bet[,1]!=0)-1
+text(nz, -0.3, "x", cex=1)
+
+plot(fips1.cv.rml[iv==1], fips1.cv.rcal[iv==1], xlim=c(0,1), ylim=c(0,1), 
+     xlab="RML", ylab="RCAL", main="fitted probabilities")
+abline(c(0,1))
+@
+\end{center}
+\end{figure}
+
+\begin{figure}[t!] 
+\caption{Standardized calibration differences and scatterplot of fitted IPS within the group $\{i: \,Z_i=0, 1\le i \le n\}$. Marks (x) are plotted at the indices corresponding to 5 or 22 nonzero coefficients out of 100 in total in the IPS model fitted using regularized calibrated estimation (RCAL) or regularized maximum likelihood estimation (RML) respectively.}\label{fig:std-diff0} 
+\vspace{-.1in}
+\begin{center}
+<<fig=TRUE, echo=FALSE>>==
+par(mfrow=c(2,2))
+par(mar=c(4,4,2,2))
+plot(check0.raw$est, xlim=c(0,p), ylim=c(-.3,.3), 
+     xlab="", ylab="std diff", main="Raw") 
+abline(h=0)
+
+plot(check0.cv.rml$est, xlim=c(0,p), ylim=c(-.3,.3), 
+     xlab="", ylab="std diff", main="RML") 
+abline(h=0)
+abline(h=max(abs(check0.cv.rml$est)) *c(-1,1), lty=2)
+
+nz=which(late.cv.rml$ips[[2]]$sel.bet[,1]!=0)-1
+text(nz, -0.3, "x", cex=1)
+
+plot(check0.cv.rcal$est, xlim=c(0,p), ylim=c(-.3,.3), 
+     xlab="", ylab="std diff", main="RCAL") 
+abline(h=0)
+abline(h=max(abs(check0.cv.rcal$est)) *c(-1,1), lty=2)
+
+nz=which(late.cv.rcal$ips[[1]]$sel.bet[,1]!=0)-1
+text(nz, -0.3, "x", cex=1)
+
+plot(fips0.cv.rml[iv==0], fips0.cv.rcal[iv==0], xlim=c(0,1), ylim=c(0,1), 
+     xlab="RML", ylab="RCAL", main="fitted probabilities")
+abline(c(0,1))
+@
+\end{center}
+\end{figure}
+
+From Figure~\ref{fig:std-diff1} or~\ref{fig:std-diff0}, the maximum absolute standardized calibration difference from regularized calibrated estimation is noticeably smaller than that from regularized maximum likelihood estimation, which is moreover achieved with a smaller number of nonzero coefficients out of 100 in total in the fitted IPS model. 
+
+For further comparison, the following uses the function \texttt{late.regu.path} to compute fitted IPS over regularization paths. Figure~\ref{fig:std-diff-path1} show how the maximum absolute standardized differences vary against the numbers of nonzero coefficients and relative variances in the $Z_i=1$ group, similarly as in Tan (2020a), Section 6. Codes are also provided to produce corresponding plots in the $Z_i=0$ group. In this example, it appears impossible for regularized maximum likelihood estimation to reduce the maximum absolute calibration difference to below 0.05, even as the Lasso penalty decreases and the number of nonzero coefficients and relative variance increase.
+<<fig=FALSE, keep.source=TRUE>>==
+set.seed(0)
+late.path.rcal <- 
+late.regu.path(fold=5*c(1,1,1), nrho=(1+10)*c(1,1,1), rho.seq=NULL,
+y, tr, iv, fx=x, gx=x, hx=x, arm=1, d1=1, d2=3, ploss="cal", yloss="gaus")
+
+set.seed(0)
+late.path.rml <- 
+late.regu.path(fold=5*c(1,1,1), nrho=(1+10)*c(1,1,1), rho.seq=NULL,
+y, tr, iv, fx=x, gx=x, hx=x, arm=1, d1=1, d2=3, ploss="ml", yloss="gaus")
+## Computation of standardized calibration differences 
+##    along regularization path within iv=1 group
+fips1.path.rcal <- late.path.rcal$mfp[[2]]
+mdiff1.path.rcal <- rep(NA, dim(fips1.path.rcal)[2])
+rvar1.path.rcal <- rep(NA, dim(fips1.path.rcal)[2])
+for (j in 1:dim(fips1.path.rcal)[2]) {
+  check1.path.rcal <- mn.ipw(x, iv, fips1.path.rcal[,j])
+  mdiff1.path.rcal[j] <- max(abs(check1.path.rcal$est))
+  rvar1.path.rcal[j] <- 
+  var(1/fips1.path.rcal[iv==1,j])/mean(1/fips1.path.rcal[iv==1,j])^2
+}
+
+fips1.path.rml <- late.path.rml$mfp[[2]]
+mdiff1.path.rml <- rep(NA, dim(fips1.path.rml)[2])
+rvar1.path.rml <- rep(NA, dim(fips1.path.rml)[2])
+for (j in 1:dim(fips1.path.rml)[2]) {
+  check1.path.rml <- mn.ipw(x, iv, fips1.path.rml[,j])
+  mdiff1.path.rml[j] <- max(abs(check1.path.rml$est))
+  rvar1.path.rml[j] <- 
+  var(1/fips1.path.rml[iv==1,j])/mean(1/fips1.path.rml[iv==1,j])^2
+}
+
+par(mfrow=c(1,2))
+par(mar=c(4,4,2,2))
+plot(late.path.rml$ips[[2]]$nz.all, mdiff1.path.rml, 
+     xlim=c(0,p), ylim=c(0,.4), xlab="# nonzero", ylab="std diff")
+lines(late.path.rml$ips[[2]]$nz.all[!late.path.rml$ips[[2]]$non.conv],
+       mdiff1.path.rml, lty=3)
+
+points(late.path.rcal$ips[[2]]$nz.all[!late.path.rcal$ips[[2]]$non.conv],
+       mdiff1.path.rcal, pch=4)
+lines(late.path.rcal$ips[[2]]$nz.all[!late.path.rcal$ips[[2]]$non.conv],
+       mdiff1.path.rcal, lty=3)
+
+legend(120,.4, c("RML","RCAL"), pch=c(1,4), cex=.6)
+
+#
+plot(rvar1.path.rml, mdiff1.path.rml, 
+     xlim=c(0,1), ylim=c(0,.4), xlab="rel var", ylab="std diff")
+lines(rvar1.path.rml, mdiff1.path.rml, lty=3)
+
+points(rvar1.path.rcal, mdiff1.path.rcal, pch=4)
+lines(rvar1.path.rcal, mdiff1.path.rcal, lty=3)
+
+legend(0.6,.4, c("RML","RCAL"), pch=c(1,4), cex=.6)
+@
+
+<<fig=FALSE, keep.source=TRUE, eval=FALSE>>==
+set.seed(0)
+late.path.rcal <- 
+late.regu.path(fold=5*c(1,1,1), nrho=(1+10)*c(1,1,1), rho.seq=NULL,
+y, tr, iv, fx=x, gx=x, hx=x, arm=0, d1=1, d2=3, ploss="cal", yloss="gaus")
+
+set.seed(0)
+late.path.rml <- 
+late.regu.path(fold=5*c(1,1,1), nrho=(1+10)*c(1,1,1), rho.seq=NULL,
+y, tr, iv, fx=x, gx=x, hx=x, arm=0, d1=1, d2=3, ploss="ml", yloss="gaus")
+## Computation of standardized calibration differences 
+##    along regularization path within iv=0 group
+fips0.path.rcal <- late.path.rcal$mfp[[1]]
+mdiff0.path.rcal <- rep(NA, dim(fips0.path.rcal)[2])
+rvar0.path.rcal <- rep(NA, dim(fips0.path.rcal)[2])
+for (j in 1:dim(fips0.path.rcal)[2]) {
+  check0.path.rcal <- mn.ipw(x, 1-iv, fips0.path.rcal[,j])
+  mdiff0.path.rcal[j] <- max(abs(check0.path.rcal$est))
+  rvar0.path.rcal[j] <- 
+  var(1/fips0.path.rcal[iv==0,j])/mean(1/fips0.path.rcal[iv==0,j])^2
+}
+fips0.path.rml <- late.path.rml$mfp[[1]]
+mdiff0.path.rml <- rep(NA, dim(fips0.path.rml)[2])
+rvar0.path.rml <- rep(NA, dim(fips0.path.rml)[2])
+for (j in 1:dim(fips0.path.rml)[2]) {
+  check0.path.rml <- mn.ipw(x, 1-iv, fips0.path.rml[,j])
+  mdiff0.path.rml[j] <- max(abs(check0.path.rml$est))
+  rvar0.path.rml[j] <- 
+  var(1/fips0.path.rml[iv==0,j])/mean(1/fips0.path.rml[iv==0,j])^2
+}
+par(mfrow=c(1,2))
+par(mar=c(4,4,2,2))
+plot(late.path.rml$ips[[2]]$nz.all, mdiff0.path.rml, 
+     xlim=c(0,p), ylim=c(0,.4), xlab="# nonzero", ylab="std diff")
+lines(late.path.rml$ips[[2]]$nz.all[!late.path.rml$ips[[2]]$non.conv],
+       mdiff0.path.rml, lty=3)
+points(late.path.rcal$ips[[1]]$nz.all[!late.path.rcal$ips[[1]]$non.conv],
+       mdiff0.path.rcal, pch=4)
+lines(late.path.rcal$ips[[1]]$nz.all[!late.path.rcal$ips[[1]]$non.conv],
+       mdiff0.path.rcal, lty=3)
+legend(120,.4, c("RML","RCAL"), pch=c(1,4), cex=.6)
+plot(rvar0.path.rml, mdiff0.path.rml, 
+     xlim=c(0,2.5), ylim=c(0,.4), xlab="rel var", ylab="std diff")
+lines(rvar0.path.rml, mdiff0.path.rml, lty=3)
+points(rvar0.path.rcal, mdiff0.path.rcal, pch=4)
+lines(rvar0.path.rcal, mdiff0.path.rcal, lty=3)
+legend(0.6,.4, c("RML","RCAL"), pch=c(1,4), cex=.6)
+@
+
+
+\begin{figure}[t!] 
+\caption{Maximum absolute standardized differences against the numbers of nonzero coefficients and relative variances within the group $\{i: \,Z_i=1, 1\le i \le n\}$.}\label{fig:std-diff-path1} 
+\vspace{-.1in}
+\begin{center}
+<<fig=TRUE, echo=FALSE>>==
+par(mfrow=c(1,2))
+par(mar=c(4,4,2,2))
+plot(late.path.rml$ips[[2]]$nz.all, mdiff1.path.rml, 
+     xlim=c(0,p), ylim=c(0,.4), xlab="# nonzero", ylab="std diff")
+lines(late.path.rml$ips[[2]]$nz.all[!late.path.rml$ips[[2]]$non.conv],
+       mdiff1.path.rml, lty=3)
+
+points(late.path.rcal$ips[[2]]$nz.all[!late.path.rcal$ips[[2]]$non.conv],
+       mdiff1.path.rcal, pch=4)
+lines(late.path.rcal$ips[[2]]$nz.all[!late.path.rcal$ips[[2]]$non.conv],
+       mdiff1.path.rcal, lty=3)
+
+legend(120,.4, c("RML","RCAL"), pch=c(1,4), cex=.6)
+
+#
+plot(rvar1.path.rml, mdiff1.path.rml, 
+     xlim=c(0,1), ylim=c(0,.4), xlab="rel var", ylab="std diff")
+lines(rvar1.path.rml, mdiff1.path.rml, lty=3)
+
+points(rvar1.path.rcal, mdiff1.path.rcal, pch=4)
+lines(rvar1.path.rcal, mdiff1.path.rcal, lty=3)
+
+legend(0.6,.4, c("RML","RCAL"), pch=c(1,4), cex=.6)
+@
+\end{center}
+\end{figure}
+
+
+\newpage
+\vspace{.2in}
+\centerline{\bf REFERENCES}
+\begin{description}
+
+\item Angrist, J.D., Imbens, G.W. and Rubin, D.B. (1996) Identification of causal effects using instrumental
+variables, {\em Journal of the American Statistical Association}, 91, 444–455.
+
+\item Chernozhukov, V., Chetverikov, D., Demirer, M., Duflo, E., Hansen, C., Newey, W. and Robins, J.M. (2018) Double/debiased machine learning for treatment and structural parameters, {\em The Econometrics Journal}, 21, C1–C68.
+
+\item Neyman, J. (1923) On the application of probability theory to agricultural experiments: Essay on principles, Section 9, translated in {\em Statistical Science}, 1990, 5, 465-480.
+
+\item Robins, J.M., Rotnitzky, A., and Zhao, L.P. (1994) Estimation of regression coefficients when some regressors are not always observed, {\em Journal of the American Statistical Association}, 89, 846-866.
+
+\item Rosenbaum, P.R. and Rubin, D.B. (1983) The central role of the propensity score in observational studies for causal effects, {\em Biometrika}, 70, 41-55.
+
+\item Rubin, D.B. (1974) Estimating causal effects of treatments in randomized and nonrandomized studies, {\em Journal of Educational Psychology}, 66, 688-701.
+
+\item Sun, B. and Tan, Z. (2020) High-dimensional model-assisted inference for local average treatment effects with instrumental variables, arXiv:2009.09286.
+
+\item Tan, Z. (2006) Regression and weighting methods for causal inference using instrumental variables, {\em Journal of the American Statistical Association}, 101, 1607–1618.
+
+\item  Tan, Z. (2007) Comment: Understanding OR, PS and DR, {\em Statistical Science}, 22, 560–568.
+
+\item Tan, Z. (2020a) Regularized calibrated estimation of propensity scores with model misspecification and high-dimensional data, {\em Biometrika}, 107, 137–158.
+
+\item Tan, Z. (2020b) Model-assisted inference for treatment effects using regularized calibrated estimation with high-dimensional data, {\em Annals of Statistics}, 48, 811–837.
+
+\item  Vytlacil, E. (2002) Independence, monotonicity, and latent index models: An equivalence result,
+{\em Econometrica}, 70, 331–341.
+
+
+\end{description}
+
+\end{document}
+
+

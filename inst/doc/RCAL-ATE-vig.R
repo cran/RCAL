@@ -1,5 +1,4 @@
-### R code from vignette source 'RCAL-vig.Rnw'
-### Encoding: ISO8859-1
+### R code from vignette source 'RCAL-ATE-vig.Rnw'
 
 ###################################################
 ### code chunk number 1: read.data
@@ -10,16 +9,16 @@ data(simu.data)
 
 
 ###################################################
-### code chunk number 2: RCAL-vig.Rnw:90-91
+### code chunk number 2: RCAL-ATE-vig.Rnw:90-91
 ###################################################
 simu.data[1:10, 1:6]
 
 
 ###################################################
-### code chunk number 3: RCAL-vig.Rnw:97-104
+### code chunk number 3: RCAL-ATE-vig.Rnw:97-104
 ###################################################
 n <- dim(simu.data)[1]
-p <- dim(simu.data)[2]-2
+p <- 100 # include the first 100 covariates due to CRAN time constraint
 
 y <- simu.data[,1]
 tr <- simu.data[,2]
@@ -28,7 +27,7 @@ x <- scale(x)
 
 
 ###################################################
-### code chunk number 4: RCAL-vig.Rnw:114-119
+### code chunk number 4: RCAL-ATE-vig.Rnw:114-119
 ###################################################
 par(mfrow=c(3,2))
 par(mar=c(4,4,2,2))
@@ -38,7 +37,7 @@ for (j in 1:6) {
 
 
 ###################################################
-### code chunk number 5: RCAL-vig.Rnw:130-135
+### code chunk number 5: RCAL-ATE-vig.Rnw:130-135
 ###################################################
 par(mfrow=c(3,2))
 par(mar=c(4,4,2,2))
@@ -48,22 +47,25 @@ for (j in 1:6) {
 
 
 ###################################################
-### code chunk number 6: RCAL-vig.Rnw:156-158
+### code chunk number 6: RCAL-ATE-vig.Rnw:156-158
 ###################################################
 mean(y[tr==1])   # point estimate
 sqrt(var(y[tr==1]) / sum(tr) )   # standard error 
 
 
 ###################################################
-### code chunk number 7: RCAL-vig.Rnw:175-190
+### code chunk number 7: RCAL-ATE-vig.Rnw:175-195
 ###################################################
 ## regularized calibrated estimation
+RNGversion('3.5.0')
 set.seed(0)   #this affects random split of data in cross validation
 mn.cv.rcal <- 
 mn.regu.cv(fold=5*c(1,1), nrho=(1+10)*c(1,1), rho.seq=NULL, y, tr, x,
            ploss="cal", yloss="gaus")
 unlist(mn.cv.rcal$est) 
 sqrt(mn.cv.rcal$est $var)
+mn.cv.rcal$ps$sel.nz[1]
+fp.cv.rcal <- mn.cv.rcal$ps$sel.fit[,1]
 
 ## regularized maximum likelihood estimation
 set.seed(0)   #this affects random split of data in cross validation
@@ -72,45 +74,47 @@ mn.regu.cv(fold=5*c(1,1), nrho=(1+10)*c(1,1), rho.seq=NULL, y, tr, x,
            ploss="ml", yloss="gaus")
 unlist(mn.cv.rml$est)
 sqrt(mn.cv.rml$est $var)
+mn.cv.rml$ps$sel.nz[1]
+fp.cv.rml <- mn.cv.rml$ps$sel.fit[,1]
 
 
 ###################################################
-### code chunk number 8: RCAL-vig.Rnw:197-227
+### code chunk number 8: RCAL-ATE-vig.Rnw:202-232 (eval = FALSE)
 ###################################################
-## regularized calibrated estimation
-set.seed(0)
-ps.cv.rcal <- 
-glm.regu.cv(fold=5, nrho=1+10, y=tr, x=x, loss="cal")
-ps.cv.rcal$sel.nz[1]
-fp.cv.rcal <- ps.cv.rcal $sel.fit[,1]
-
-or.cv.rcal <- 
-glm.regu.cv(fold=5, nrho=1+10, y=y[tr==1], x=x[tr==1,], 
-            iw=1/fp.cv.rcal[tr==1]-1, loss="gaus")
-fo.cv.rcal <- c( cbind(1,x)%*%or.cv.rcal$sel.bet[,1] )
-
-mn.cv.rcal2 <- unlist(mn.aipw(y, tr, fp=fp.cv.rcal, fo=fo.cv.rcal))
-mn.cv.rcal2
-
-## regularized maximum likelihood estimation
-set.seed(0)
-
-ps.cv.rml <- 
-glm.regu.cv(fold=5, nrho=1+10, y=tr, x=x, loss="ml")
-ps.cv.rml$sel.nz[1]
-fp.cv.rml <- ps.cv.rml $sel.fit[,1]
-
-or.cv.rml <- 
-glm.regu.cv(fold=5, nrho=1+10, y=y[tr==1], x=x[tr==1,], 
-            iw=NULL, loss="gaus")
-fo.cv.rml <- c( cbind(1,x)%*%or.cv.rml$sel.bet[,1] )
-
-mn.cv.rml2 <- unlist(mn.aipw(y, tr, fp=fp.cv.rml, fo=fo.cv.rml))
-mn.cv.rml2
+## ## regularized calibrated estimation
+## set.seed(0)
+## ps.cv.rcal <- 
+## glm.regu.cv(fold=5, nrho=1+10, y=tr, x=x, loss="cal")
+## ps.cv.rcal$sel.nz[1]
+## fp.cv.rcal <- ps.cv.rcal $sel.fit[,1]
+## 
+## or.cv.rcal <- 
+## glm.regu.cv(fold=5, nrho=1+10, y=y[tr==1], x=x[tr==1,], 
+##             iw=1/fp.cv.rcal[tr==1]-1, loss="gaus")
+## fo.cv.rcal <- c( cbind(1,x)%*%or.cv.rcal$sel.bet[,1] )
+## 
+## mn.cv.rcal2 <- unlist(mn.aipw(y, tr, fp=fp.cv.rcal, fo=fo.cv.rcal))
+## mn.cv.rcal2
+## 
+## ## regularized maximum likelihood estimation
+## set.seed(0)
+## 
+## ps.cv.rml <- 
+## glm.regu.cv(fold=5, nrho=1+10, y=tr, x=x, loss="ml")
+## ps.cv.rml$sel.nz[1]
+## fp.cv.rml <- ps.cv.rml $sel.fit[,1]
+## 
+## or.cv.rml <- 
+## glm.regu.cv(fold=5, nrho=1+10, y=y[tr==1], x=x[tr==1,], 
+##             iw=NULL, loss="gaus")
+## fo.cv.rml <- c( cbind(1,x)%*%or.cv.rml$sel.bet[,1] )
+## 
+## mn.cv.rml2 <- unlist(mn.aipw(y, tr, fp=fp.cv.rml, fo=fo.cv.rml))
+## mn.cv.rml2
 
 
 ###################################################
-### code chunk number 9: RCAL-vig.Rnw:248-274
+### code chunk number 9: RCAL-ATE-vig.Rnw:253-279
 ###################################################
 fp.raw <- rep(mean(tr), n)   #constant propensity scores
 check.raw <- mn.ipw(x, tr, fp.raw)
@@ -141,7 +145,7 @@ abline(c(0,1))
 
 
 ###################################################
-### code chunk number 10: RCAL-vig.Rnw:281-300
+### code chunk number 10: RCAL-ATE-vig.Rnw:286-305
 ###################################################
 par(mfrow=c(2,2))
 par(mar=c(4,4,2,2))
@@ -165,7 +169,7 @@ abline(c(0,1))
 
 
 ###################################################
-### code chunk number 11: RCAL-vig.Rnw:315-342
+### code chunk number 11: RCAL-ATE-vig.Rnw:320-347
 ###################################################
 set.seed(0)
 ps.path.rcal <- 
@@ -197,7 +201,7 @@ for (j in 1:dim(fp.path.rml)[2]) {
 
 
 ###################################################
-### code chunk number 12: RCAL-vig.Rnw:349-369
+### code chunk number 12: RCAL-ATE-vig.Rnw:354-374
 ###################################################
 par(mfrow=c(1,2))
 par(mar=c(4,4,2,2))
@@ -222,7 +226,7 @@ legend(1.0,.3, c("RML","RCAL"), pch=c(1,4), cex=.6)
 
 
 ###################################################
-### code chunk number 13: RCAL-vig.Rnw:379-397
+### code chunk number 13: RCAL-ATE-vig.Rnw:384-401
 ###################################################
 ## regularized calibrated estimation
 set.seed(0)
@@ -232,7 +236,6 @@ ate.regu.cv(fold=5*c(1,1), nrho=(1+10)*c(1,1), rho.seq=NULL, y, tr, x,
 matrix(unlist(ate.cv.rcal$est), ncol=2, byrow=T, 
 dimnames=list(c("one", "ipw", "or", "est", "var", "ze", 
 "diff.est", "diff.var", "diff.ze"), c("untreated", "treated")))
-
 
 ## regularized maximum likelihood estimation
 set.seed(0)
